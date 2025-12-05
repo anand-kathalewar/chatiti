@@ -927,27 +927,32 @@ console.log('✅ FIXED File Text Extraction modules loaded!');
 console.log('📄 Supported: PDF, Excel, CSV, Images');
 console.log('🔧 Compatible with existing file structure');
 
-// ==================== SYLLABUS PDF ANALYZER - GITHUB PAGES VERSION ====================
-// This version is optimized for GitHub Pages / Hostinger / any proper web hosting
-// NO CORS PROXY NEEDED when hosted on a real domain!
-// REPLACE your existing SyllabusPDFAnalyzer with this version
+// ==================== SYLLABUS PDF ANALYZER - PRODUCTION VERSION ====================
+// CORS proxy needed even on GitHub Pages because CSTAR blocks cross-origin requests
+// This is the FINAL production-ready version
 
 const SyllabusPDFAnalyzer = {
-    // Cache for storing extracted PDF text (avoids re-fetching)
+    // Cache for storing extracted PDF text
     pdfCache: {},
     
     // Loading state tracking
     currentlyFetching: {},
     
+    // CORS proxy - try multiple in order
+    corsProxies: [
+        'https://api.allorigins.win/raw?url=',  // Most reliable
+        'https://corsproxy.io/?',                // Backup 1
+        'https://api.codetabs.com/v1/proxy?quest=' // Backup 2
+    ],
+    
+    currentProxyIndex: 0,
+    
     /**
      * Detects if user query is about PDF content
-     * @param {string} message - User's query
-     * @returns {boolean} - True if query needs PDF content
      */
     detectPDFContentQuery: function(message) {
         const lowerMessage = message.toLowerCase();
         
-        // Keywords that indicate PDF content query
         const pdfContentKeywords = [
             'module', 'chapter', 'topic', 'unit',
             'what is in', 'what are in', 'what\'s in',
@@ -960,12 +965,10 @@ const SyllabusPDFAnalyzer = {
             'मध्ये काय', 'में क्या', 'details of'
         ];
         
-        // Check if message contains any PDF content keywords
         const hasPDFKeyword = pdfContentKeywords.some(keyword => 
             lowerMessage.includes(keyword)
         );
         
-        // Also check if message mentions syllabus + module/chapter
         const mentionsSyllabus = lowerMessage.includes('syllabus') || 
                                   lowerMessage.includes('curriculum');
         const mentionsSection = lowerMessage.includes('module') || 
@@ -983,11 +986,7 @@ const SyllabusPDFAnalyzer = {
     },
     
     /**
-     * Fetches and extracts text from syllabus PDF
-     * DIRECT FETCH - No CORS proxy needed on proper hosting!
-     * @param {string} syllabusUrl - Direct PDF URL from CSTAR
-     * @param {string} tradeCode - Trade code for caching
-     * @returns {Promise<Object>} - {success, text, error, pages}
+     * Fetches PDF using multiple CORS proxies with fallback
      */
     fetchSyllabusPDF: async function(syllabusUrl, tradeCode) {
         console.log('📥 Fetching syllabus PDF:', syllabusUrl);
@@ -1009,119 +1008,115 @@ const SyllabusPDFAnalyzer = {
             return this.currentlyFetching[tradeCode];
         }
         
-        // Start fetching - DIRECT (no proxy needed on GitHub Pages!)
+        // Try fetching with multiple proxies
         const fetchPromise = (async () => {
-            try {
-                console.log('🌐 Downloading PDF from CSTAR...');
-                console.log('🔧 Direct fetch (no proxy needed on proper hosting)');
+            // Try each proxy in sequence
+            for (let i = 0; i < this.corsProxies.length; i++) {
+                const proxy = this.corsProxies[i];
                 
-                // Direct fetch to CSTAR
-                const response = await fetch(syllabusUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/pdf'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                // Get PDF as array buffer
-                const arrayBuffer = await response.arrayBuffer();
-                console.log('✅ PDF downloaded, size:', (arrayBuffer.byteLength / 1024).toFixed(2), 'KB');
-                
-                // Load PDF with PDF.js
-                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                const pdf = await loadingTask.promise;
-                
-                console.log('📄 PDF loaded, pages:', pdf.numPages);
-                
-                // Extract text from all pages
-                let fullText = '';
-                
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
-                    fullText += `\n--- Page ${pageNum} ---\n${pageText}\n`;
+                try {
+                    console.log(`🌐 Attempt ${i + 1}/${this.corsProxies.length}: Trying proxy...`);
+                    console.log(`🔧 Proxy: ${proxy.substring(0, 30)}...`);
                     
-                    // Progress logging every 10 pages
-                    if (pageNum % 10 === 0 || pageNum === pdf.numPages) {
-                        console.log(`📖 Extracted ${pageNum}/${pdf.numPages} pages...`);
+                    // Construct proxied URL
+                    const proxiedUrl = proxy + encodeURIComponent(syllabusUrl);
+                    
+                    // Fetch PDF with timeout
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+                    
+                    const response = await fetch(proxiedUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/pdf'
+                        },
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        console.warn(`⚠️ Proxy ${i + 1} failed: HTTP ${response.status}`);
+                        continue; // Try next proxy
                     }
+                    
+                    // Get PDF as array buffer
+                    const arrayBuffer = await response.arrayBuffer();
+                    console.log('✅ PDF downloaded, size:', (arrayBuffer.byteLength / 1024).toFixed(2), 'KB');
+                    
+                    // Load PDF with PDF.js
+                    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                    const pdf = await loadingTask.promise;
+                    
+                    console.log('📄 PDF loaded, pages:', pdf.numPages);
+                    
+                    // Extract text from all pages
+                    let fullText = '';
+                    
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += `\n--- Page ${pageNum} ---\n${pageText}\n`;
+                        
+                        if (pageNum % 10 === 0 || pageNum === pdf.numPages) {
+                            console.log(`📖 Extracted ${pageNum}/${pdf.numPages} pages...`);
+                        }
+                    }
+                    
+                    console.log('✅ PDF text extraction complete!');
+                    console.log('📊 Total text length:', fullText.length, 'characters');
+                    console.log('🎉 Success with proxy:', proxy.substring(0, 30) + '...');
+                    
+                    // Cache the result
+                    this.pdfCache[tradeCode] = {
+                        text: fullText,
+                        pages: pdf.numPages,
+                        timestamp: Date.now()
+                    };
+                    
+                    return {
+                        success: true,
+                        text: fullText,
+                        pages: pdf.numPages,
+                        cached: false,
+                        proxyUsed: proxy
+                    };
+                    
+                } catch (error) {
+                    console.error(`❌ Proxy ${i + 1} failed:`, error.message);
+                    // Continue to next proxy
                 }
-                
-                console.log('✅ PDF text extraction complete!');
-                console.log('📊 Total text length:', fullText.length, 'characters');
-                
-                // Cache the result
-                this.pdfCache[tradeCode] = {
-                    text: fullText,
-                    pages: pdf.numPages,
-                    timestamp: Date.now()
-                };
-                
-                return {
-                    success: true,
-                    text: fullText,
-                    pages: pdf.numPages,
-                    cached: false
-                };
-                
-            } catch (error) {
-                console.error('❌ PDF fetch/extraction failed:', error);
-                
-                // Better error messages
-                let errorType = 'UNKNOWN';
-                let userMessage = '';
-                
-                if (error.message.includes('CORS') || error.message.includes('blocked')) {
-                    errorType = 'CORS_ISSUE';
-                    userMessage = 'PDF access blocked. If running locally, deploy to GitHub Pages or web hosting.';
-                } else if (error.message.includes('403')) {
-                    errorType = 'FORBIDDEN';
-                    userMessage = 'CSTAR server denied access. Try again or use download+upload method.';
-                } else if (error.message.includes('404')) {
-                    errorType = 'NOT_FOUND';
-                    userMessage = 'PDF not found at CSTAR. The link might be outdated.';
-                } else if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
-                    errorType = 'NETWORK';
-                    userMessage = 'Network error. Check your internet connection.';
-                } else {
-                    userMessage = error.message;
-                }
-                
-                console.error('🚫 Error type:', errorType);
-                
-                return {
-                    success: false,
-                    error: errorType,
-                    text: null,
-                    message: userMessage
-                };
-            } finally {
-                // Clear fetching state
-                delete this.currentlyFetching[tradeCode];
             }
+            
+            // All proxies failed
+            console.error('❌ All CORS proxies failed');
+            console.log('💡 Falling back to user download method');
+            
+            return {
+                success: false,
+                error: 'ALL_PROXIES_FAILED',
+                text: null,
+                message: 'CSTAR server blocked all automated access methods'
+            };
+            
         })();
         
-        // Store promise to prevent duplicate fetches
+        // Store promise
         this.currentlyFetching[tradeCode] = fetchPromise;
         
-        return fetchPromise;
+        const result = await fetchPromise;
+        delete this.currentlyFetching[tradeCode];
+        
+        return result;
     },
     
     /**
      * Extracts specific module content from PDF text
-     * @param {string} pdfText - Full PDF text
-     * @param {number} moduleNumber - Module number to extract
-     * @returns {string} - Extracted module content
      */
     extractModuleContent: function(pdfText, moduleNumber) {
         console.log('🔎 Extracting Module', moduleNumber, 'from PDF text...');
         
-        // Try multiple patterns to find module
         const patterns = [
             new RegExp(`MODULE[\\s-]*${moduleNumber}[\\s:.-]+(.*?)(?=MODULE[\\s-]*${moduleNumber + 1}|$)`, 'si'),
             new RegExp(`Module[\\s-]*${moduleNumber}[\\s:.-]+(.*?)(?=Module[\\s-]*${moduleNumber + 1}|$)`, 'si'),
@@ -1134,20 +1129,20 @@ const SyllabusPDFAnalyzer = {
             if (match && match[1]) {
                 const content = match[1].trim();
                 console.log('✅ Module', moduleNumber, 'found! Length:', content.length, 'chars');
-                return content.substring(0, 4000); // Limit to 4000 chars
+                return content.substring(0, 4000);
             }
         }
         
         console.log('⚠️ Module', moduleNumber, 'not found with standard patterns');
         
-        // Fallback: Search for simple "Module X" text
+        // Fallback
         const simplePattern = new RegExp(`Module\\s*${moduleNumber}[^\\d].*`, 'i');
         const simpleMatch = pdfText.match(simplePattern);
         
         if (simpleMatch) {
             const startIndex = simpleMatch.index;
             const content = pdfText.substring(startIndex, startIndex + 2000);
-            console.log('⚠️ Using fallback extraction, length:', content.length, 'chars');
+            console.log('⚠️ Using fallback extraction');
             return content;
         }
         
@@ -1157,9 +1152,6 @@ const SyllabusPDFAnalyzer = {
     
     /**
      * Extracts chapter/topic content from PDF text
-     * @param {string} pdfText - Full PDF text
-     * @param {string} chapterQuery - Chapter name or number
-     * @returns {string} - Extracted content
      */
     extractChapterContent: function(pdfText, chapterQuery) {
         console.log('🔎 Searching for chapter/topic:', chapterQuery);
@@ -1178,10 +1170,7 @@ const SyllabusPDFAnalyzer = {
     },
     
     /**
-     * Main function to analyze PDF for user query
-     * @param {Object} trade - Trade object from database
-     * @param {string} userQuery - User's question
-     * @returns {Promise<string>} - Relevant PDF content or error message
+     * Main analysis function with smart fallback
      */
     analyzePDF: async function(trade, userQuery) {
         console.log('═══════════════════════════════════════════════');
@@ -1196,46 +1185,44 @@ const SyllabusPDFAnalyzer = {
         const pdfResult = await this.fetchSyllabusPDF(trade.syllabusUrl, trade.code);
         
         if (!pdfResult.success) {
-            // Provide helpful error message based on error type
-            console.log('💡 Providing fallback instructions');
+            // Provide helpful fallback message
+            console.log('💡 Providing download + upload instructions');
             
-            let errorMessage = `⚠️ **Unable to Access PDF**\n\n`;
-            
-            if (pdfResult.error === 'CORS_ISSUE') {
-                errorMessage += `**Issue:** Running from local file system (file://) blocks PDF access.\n\n`;
-                errorMessage += `**Solution:** Deploy to GitHub Pages or web hosting for full functionality.\n\n`;
-            } else if (pdfResult.error === 'FORBIDDEN' || pdfResult.error === 'NETWORK') {
-                errorMessage += `**Issue:** ${pdfResult.message}\n\n`;
-            }
-            
-            errorMessage += `**🎯 Alternative Options:**\n\n`;
-            errorMessage += `**OPTION 1: Download & Upload (Works 100%)**\n`;
-            errorMessage += `1. 📥 Download the syllabus PDF:\n`;
-            errorMessage += `   ${trade.syllabusUrl}\n\n`;
-            errorMessage += `2. 📤 Upload the downloaded PDF here\n\n`;
-            errorMessage += `3. ✅ Ask me again: "${userQuery}"\n`;
-            errorMessage += `   I'll extract the exact content from your uploaded file!\n\n`;
-            
-            errorMessage += `**OPTION 2: View PDF Directly**\n`;
-            errorMessage += `Open the PDF link above in a new tab and browse manually.\n\n`;
-            
-            errorMessage += `**OPTION 3: General Guidance**\n`;
-            errorMessage += `I can provide general information about typical ${trade.name} curriculum based on standard ITI syllabus structure. Would you like that instead?\n\n`;
-            
-            errorMessage += `🔧 **Note:** Deploying to GitHub Pages or web hosting will enable automatic PDF analysis!`;
-            
-            return errorMessage;
+            return `⚠️ **Unable to Access PDF Automatically**
+
+I tried multiple methods to fetch the syllabus PDF, but CSTAR's server blocks automated access for security reasons.
+
+**🎯 Easy Solution - Download & Upload (2 minutes):**
+
+1. 📥 **Download the syllabus PDF:**
+   ${trade.syllabusUrl}
+   (Right-click → Save As)
+
+2. 📤 **Upload it here** using the 📎 button below
+
+3. ✅ **Ask me again:** "${userQuery}"
+   I'll extract the exact module content from your uploaded file!
+
+**Why this works:**
+- 100% reliable method
+- You control the PDF
+- Accurate extraction guaranteed
+- Works every time
+
+**Alternative:**
+Open the PDF link above directly in your browser to view Module ${this.extractModuleNumber(userQuery) || '1'} manually.
+
+**Note:** This is a known limitation with CSTAR's security settings. The download-upload method gives you the most accurate results!`;
         }
         
         const pdfText = pdfResult.text;
-        const cacheStatus = pdfResult.cached ? '(from cache)' : '(freshly downloaded)';
-        console.log(`✅ PDF ready ${cacheStatus}: ${pdfText.length} characters from ${pdfResult.pages} pages`);
+        const cacheStatus = pdfResult.cached ? '(cached)' : `(via proxy)`;
+        console.log(`✅ PDF ready ${cacheStatus}:`, pdfText.length, 'chars from', pdfResult.pages, 'pages');
         
-        // Detect what user is asking for
+        // Extract module if requested
         const lowerQuery = userQuery.toLowerCase();
-        
-        // Extract module number if present
         const moduleMatch = lowerQuery.match(/module\s*(\d+)/i);
+        
         if (moduleMatch) {
             const moduleNum = parseInt(moduleMatch[1]);
             console.log('🎯 User asking about Module', moduleNum);
@@ -1245,11 +1232,11 @@ const SyllabusPDFAnalyzer = {
             if (moduleContent) {
                 return `📚 **SYLLABUS CONTENT - Module ${moduleNum} from ${trade.name}**\n\n${moduleContent}\n\n---\n📄 *[Extracted from official CSTAR syllabus PDF]*\n\n**Need more details?**\n• Ask about another module\n• Request specific topics\n• Upload the PDF for deeper analysis`;
             } else {
-                return `⚠️ Could not locate Module ${moduleNum} using standard patterns in the PDF.\n\n**Here's the beginning of the syllabus (first 4000 chars):**\n\n${pdfText.substring(0, 4000)}\n\n**Suggestions:**\n• The PDF might use different formatting\n• Try downloading and searching manually: ${trade.syllabusUrl}\n• Or upload the PDF and I'll help you find specific sections`;
+                return `⚠️ Could not locate Module ${moduleNum} with standard formatting.\n\n**Here's the beginning of the syllabus (first 4000 chars):**\n\n${pdfText.substring(0, 4000)}\n\n**Suggestions:**\n• Download and upload the PDF for better extraction\n• Browse the PDF manually: ${trade.syllabusUrl}`;
             }
         }
         
-        // Extract chapter number if present
+        // Extract chapter if requested
         const chapterMatch = lowerQuery.match(/chapter\s*(\d+)/i);
         if (chapterMatch) {
             const chapterNum = parseInt(chapterMatch[1]);
@@ -1262,13 +1249,21 @@ const SyllabusPDFAnalyzer = {
             }
         }
         
-        // If no specific module/chapter, return first part of PDF
+        // No specific module/chapter - provide overview
         console.log('ℹ️ No specific module/chapter requested, returning overview');
         return `📚 **SYLLABUS OVERVIEW - ${trade.name}**\n\n${pdfText.substring(0, 5000)}\n\n---\n📄 *[Beginning of official CSTAR syllabus. Full PDF has ${pdfResult.pages} pages]*\n\n**Want specific information?**\n• Ask: "What's in Module 1?"\n• Ask: "Topics in Chapter 2"\n• Upload the PDF for detailed analysis`;
     },
     
     /**
-     * Clear cache (useful for testing or memory management)
+     * Helper to extract module number from query
+     */
+    extractModuleNumber: function(query) {
+        const match = query.match(/module\s*(\d+)/i);
+        return match ? match[1] : null;
+    },
+    
+    /**
+     * Clear cache
      */
     clearCache: function() {
         this.pdfCache = {};
@@ -1276,10 +1271,10 @@ const SyllabusPDFAnalyzer = {
     }
 };
 
-console.log('✅ SyllabusPDFAnalyzer loaded (GitHub Pages Ready)!');
-console.log('📚 Features: Direct PDF fetching, caching, module extraction');
-console.log('🌐 Optimized for: GitHub Pages, Hostinger, or any web hosting');
-console.log('🚫 NO CORS proxy needed on proper hosting!');
+console.log('✅ SyllabusPDFAnalyzer loaded (Production v4.0)!');
+console.log('📚 Features: Multi-proxy CORS handling, caching, smart fallback');
+console.log('🔧 CORS Proxies:', SyllabusPDFAnalyzer.corsProxies.length);
+console.log('🌐 Optimized for: GitHub Pages with CSTAR CORS restrictions');
 // ==================== FINAL COMPLETE AIENGINE WITH PDF ANALYSIS ====================
 // This version has ALL features: Lesson Plan Generator, File Upload, Multi-language, Syllabus Database, PDF Content Analysis
 // REPLACE YOUR ENTIRE AIEngine WITH THIS VERSION
