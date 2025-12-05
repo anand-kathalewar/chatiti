@@ -20,7 +20,7 @@ AI-powered assistant for Maharashtra Industrial Training Institutes.
 
 ## 🚀 Live Demo
 
-**Production URL:** https://anandkathalewar.github.io/chatiti
+**Production URL:** https://anand-kathalewar.github.io/chatiti
 
 ## 👨‍🏫 Developed By
 
@@ -198,9 +198,9 @@ Educational use for Maharashtra Industrial Training Institutes.
 
 ## 🙏 Acknowledgments
 
-- **CSTAR** - For official ITI syllabus PDFs
+- **CSTARI** - For official ITI syllabus PDFs
 - **DGET (Directorate General of Employment & Training)** - For lesson plan standards
-- **Maharashtra ITI Network** - For feedback and support
+- **Maharashtra ITI Network www.dvet.gov.in** - For feedback and support
 - **Government ITI Nagpur** - For supporting innovation
 - **Groq** - For AI infrastructure
 - **Anthropic Claude** - For development assistance
@@ -209,7 +209,7 @@ Educational use for Maharashtra Industrial Training Institutes.
 
 **Developer:** Anand Kathalewar
 - **Institution:** Government ITI Nagpur
-- **GitHub:** [@anandkathalewar](https://github.com/anandkathalewar)
+- **GitHub:** [@anand-kathalewar](https://github.com/anand-kathalewar)
 - **Role:** Mathematics & Drawing Instructor
 
 **For Technical Support:**
@@ -281,9 +281,9 @@ ChatITI represents a breakthrough in ITI education technology by:
 
 ## 📚 Resources
 
-- [CSTAR Official Website](https://www.cstaricalcutta.gov.in)
+- [CSTARI Official Website](https://www.cstaricalcutta.gov.in)
 - [DGET Guidelines](http://www.dget.nic.in)
-- [Maharashtra ITI Network](https://msbve.ac.in)
+- [Maharashtra ITI Network](https://www.dvet.gov.in)
 
 ---
 
