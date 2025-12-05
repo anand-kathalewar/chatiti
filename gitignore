@@ -1,0 +1,267 @@
+# ==================== CHATITI .GITIGNORE ====================
+# Git configuration for ChatITI project
+# Created by: Anand Kathalewar
+
+# ==================== SYSTEM FILES ====================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==================== EDITOR & IDE ====================
+
+# Visual Studio Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime_session
+
+# JetBrains IDEs (IntelliJ, WebStorm, etc.)
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Atom
+.atom/
+.ftpconfig
+.sftpconfig
+
+# ==================== LOGS ====================
+
+# All log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+
+# ==================== ENVIRONMENT & SECRETS ====================
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# API keys and secrets (IMPORTANT!)
+secrets.js
+config.local.js
+*.secret
+*.pem
+*.key
+
+# ==================== DEPENDENCIES ====================
+
+# Node modules (if added in future)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Bower
+bower_components/
+
+# ==================== BUILD & DIST ====================
+
+# Build directories
+/dist
+/build
+/out
+/.next
+/.nuxt
+/.cache
+
+# Compiled files
+*.min.js
+*.min.css
+
+# ==================== TEMPORARY FILES ====================
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~.nib
+local.properties
+.loadpath
+.recommenders
+
+# Backup files
+*.backup
+*.old
+*.orig
+
+# ==================== TESTING ====================
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output
+
+# Jest
+.jest/
+
+# ==================== DATABASE ====================
+
+# Local databases (if any)
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# ==================== CACHE ====================
+
+# Cache directories
+.cache/
+.parcel-cache/
+.sass-cache/
+.eslintcache
+.stylelintcache
+
+# ==================== MISC ====================
+
+# Compressed files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Images originals (keep optimized versions only)
+# Uncomment if you want to ignore source images
+# *.psd
+# *.ai
+# *.sketch
+
+# Documentation drafts
+drafts/
+notes.txt
+TODO.txt
+NOTES.md
+
+# Personal files
+personal/
+private/
+
+# ==================== PROJECT-SPECIFIC ====================
+
+# ChatITI specific ignores
+
+# Test files for development
+test/
+tests/
+__tests__/
+
+# Development only files
+dev/
+development/
+
+# Local configuration overrides
+config.local.json
+settings.local.json
+
+# User uploaded files during testing
+uploads/
+user-files/
+
+# ==================== COMMENTS ====================
+
+# This .gitignore is comprehensive and covers:
+# 1. System files (Mac, Windows, Linux)
+# 2. Editor configurations (VS Code, Sublime, etc.)
+# 3. Environment variables and secrets
+# 4. Dependencies (node_modules, etc.)
+# 5. Build outputs
+# 6. Temporary and backup files
+# 7. Testing artifacts
+# 8. Cache directories
+# 9. ChatITI-specific exclusions
+
+# Key Security Notes:
+# - NEVER commit API keys or secrets
+# - Keep .env files local only
+# - Don't commit node_modules
+# - Exclude sensitive configuration files
+
+# For GitHub Pages deployment:
+# - All HTML, CSS, JS files are committed
+# - No build process needed
+# - Direct deployment from repository
+
+# Maintained by: Anand Kathalewar
+# Project: ChatITI
+# Institution: Government ITI Nagpur

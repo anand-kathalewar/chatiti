@@ -1,0 +1,3646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatITI - AI Assistant for Maharashtra ITIs</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- SheetJS Library for Excel Processing -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+     <!-- EmailJS Library for Email Sending -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        /* File Upload Styles */
+        .file-upload-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-upload {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-upload svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-display-area {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .file-icon {
+            font-size: 24px;
+        }
+        
+        .file-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .file-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        
+        .file-size {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        
+        .btn-remove-file {
+            padding: 6px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            color: #f87171;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-remove-file:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .message-file {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .message-file .file-icon {
+            font-size: 18px;
+        }
+        
+        .message-file .file-name {
+            font-weight: 500;
+            color: #818cf8;
+        }
+        
+        .message-file .file-size {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        
+        .upload-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        
+        .upload-hint strong {
+            color: #94a3b8;
+        }
+    </style>
+<!-- Libraries for file text extraction -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landingPage" class="landing-page">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="12" fill="url(#logo-gradient)"/>
+                    <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="logo-gradient" x1="0" y1="0" x2="40" y2="40">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="brand-name">ChatITI</span>
+                <span class="brand-creator">by Anand Kathalewar</span>
+            </div>
+            <div class="navbar-actions">
+                <button class="btn-secondary" onclick="showModal('loginModal')">Sign In</button>
+                <button class="btn-primary" onclick="showModal('signupModal')">Get Started</button>
+            </div>
+        </nav>
+
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">Your AI-Powered ITI Assistant</h1>
+                <p class="hero-subtitle">Get instant help on any topic, ITI information, technical education, and career guidance. Now with file upload support!</p>
+                <div class="hero-features">
+                    <div class="feature-badge">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                        </svg>
+                        <span>Upload PDFs & Excel</span>
+                    </div>
+                    <div class="feature-badge">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                        </svg>
+                        <span>ITI Database</span>
+                    </div>
+                    <div class="feature-badge">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                        </svg>
+                        <span>Free Forever</span>
+                    </div>
+                </div>
+                <button class="btn-cta" onclick="showModal('signupModal')">
+                    Start Chatting Now
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need in one AI assistant</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3>File Upload</h3>
+                    <p>Upload PDFs, Excel files, and images. Get instant analysis and answers about your documents.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎓</div>
+                    <h3>ITI Information</h3>
+                    <p>Comprehensive database of Maharashtra ITIs, trades, admissions, and career guidance.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Instant Answers</h3>
+                    <p>Get immediate responses to technical questions, trade information, and career advice.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Multi-Language</h3>
+                    <p>Communicate in English, Hindi, or Marathi - whatever you're comfortable with.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💼</div>
+                    <h3>Career Guidance</h3>
+                    <p>Personalized advice for students, placement support, and skill development tips.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Private & Secure</h3>
+                    <p>Your conversations and uploaded files are private and secure. Data stays with you.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="creator-section">
+            <div class="creator-card">
+                <div class="creator-avatar">AK</div>
+                <div class="creator-info">
+                    <h3>Created by Anand Kathalewar</h3>
+                    <p class="creator-title">Mathematics & Drawing Instructor</p>
+                    <p class="creator-experience">Government ITI Nagpur • 28+ Years Experience</p>
+                    <div class="creator-stats">
+                        <div class="stat">
+                            <div class="stat-number">932+</div>
+                            <div class="stat-label">Students Taught</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">28+</div>
+                            <div class="stat-label">Years Teaching</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">100+</div>
+                            <div class="stat-label">Projects Created</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of students and educators using ChatITI</p>
+            <button class="btn-cta-large" onclick="showModal('signupModal')">
+                Create Free Account
+                <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <button class="btn-close" onclick="closeModal('loginModal')">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+            </div>
+            <form onsubmit="handleLogin(event)" class="modal-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="link" onclick="showForgotPassword(); return false;">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn-submit">Sign In</button>
+                <div class="form-footer">
+                    Don't have an account? <a href="#" onclick="closeModal('loginModal'); showModal('signupModal')">Sign up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <button class="btn-close" onclick="closeModal('signupModal')">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+            </div>
+            <form onsubmit="handleSignup(event)" class="modal-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="signupName" required placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-submit">Create Account</button>
+                <div class="form-footer">
+                    Already have an account? <a href="#" onclick="closeModal('signupModal'); showModal('loginModal')">Sign in</a>
+                </div>
+            </form>
+        </div>
+    </div>
+<!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reset Your Password</h2>
+                <button class="btn-close" onclick="closeModal('forgotPasswordModal')">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+            </div>
+            <form onsubmit="handleForgotPassword(event)" class="modal-form">
+                <p style="color: #94a3b8; margin-bottom: 20px;">
+                    Enter your email address and we'll send you a link to reset your password.
+                </p>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="forgotEmail" required placeholder="your@email.com">
+                </div>
+                <button type="submit" class="btn-submit">Send Reset Link</button>
+                <div class="form-footer">
+                    Remember your password? <a href="#" onclick="closeModal('forgotPasswordModal'); showModal('loginModal'); return false;">Sign in</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Password</h2>
+                <button class="btn-close" onclick="closeModal('resetPasswordModal')">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+            </div>
+            <form onsubmit="handlePasswordReset(event)" class="modal-form">
+                <p style="color: #94a3b8; margin-bottom: 20px;">
+                    Please enter your new password below.
+                </p>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required placeholder="••••••••" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required placeholder="••••••••" minlength="6">
+                </div>
+                <button type="submit" class="btn-submit">Reset Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chat Application -->
+    <div id="chatApp" class="chat-app" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="12" fill="url(#sidebar-logo-gradient)"/>
+                        <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="sidebar-logo-gradient" x1="0" y1="0" x2="40" y2="40">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#8b5cf6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="sidebar-logo-text">ChatITI</span>
+                </div>
+                <button class="btn-new-chat" onclick="startNewChat()">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
+                    </svg>
+                    New Chat
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="chat-history-section">
+                    <div class="section-label">Today</div>
+                    <div id="todayChats" class="chat-history-list"></div>
+                </div>
+                <div class="chat-history-section">
+                    <div class="section-label">Previous 7 Days</div>
+                    <div id="weekChats" class="chat-history-list"></div>
+                </div>
+                <div class="chat-history-section">
+                    <div class="section-label">Previous 30 Days</div>
+                    <div id="monthChats" class="chat-history-list"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <span id="userInitials"></span>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name" id="userName"></div>
+                            <div class="user-email" id="userEmail"></div>
+                        </div>
+                    </div>
+                    <button class="btn-icon" onclick="toggleUserMenu()">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="userDropdown" class="user-dropdown" style="display: none;">
+                    <a href="#" onclick="showSettings()">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"/>
+                        </svg>
+                        Settings
+                    </a>
+                    <a href="#" onclick="handleLogout()">
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M3 3a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                        </svg>
+                        Sign Out
+                    </a>
+                </div>
+                <div class="creator-credit">
+                    <span>Created by</span>
+                    <strong>Anand Kathalewar</strong>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+            <div class="chat-container">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="welcome-screen">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">
+                            <svg width="80" height="80" viewBox="0 0 40 40" fill="none">
+                                <rect width="40" height="40" rx="12" fill="url(#welcome-gradient)"/>
+                                <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <defs>
+                                    <linearGradient id="welcome-gradient" x1="0" y1="0" x2="40" y2="40">
+                                        <stop offset="0%" stop-color="#6366f1"/>
+                                        <stop offset="100%" stop-color="#8b5cf6"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h1 class="welcome-title">Welcome to ChatITI</h1>
+                        <p class="welcome-subtitle">Your AI-powered assistant with file upload support!</p>
+                        <div class="suggestion-cards">
+                            <button class="suggestion-card" onclick="sendSuggestion('Tell me about Solar energy')">
+                                <div class="suggestion-icon">⚡</div>
+                                <div class="suggestion-text">Tell me about Solar energy</div>
+                            </button>
+                            <button class="suggestion-card" onclick="sendSuggestion('Which ITIs are in Nagpur?')">
+                                <div class="suggestion-icon">🏫</div>
+                                <div class="suggestion-text">Which ITIs are in Nagpur?</div>
+                            </button>
+                            <button class="suggestion-card" onclick="sendSuggestion('Explain 3-phase motor working')">
+                                <div class="suggestion-icon">🔧</div>
+                                <div class="suggestion-text">Explain 3-phase motor working</div>
+                            </button>
+                            <button class="suggestion-card" onclick="document.getElementById('fileInput').click()">
+                                <div class="suggestion-icon">📄</div>
+                                <div class="suggestion-text">Upload a file to analyze</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div id="chatMessages" class="chat-messages"></div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <!-- File Display Area -->
+                <div id="fileDisplayArea" class="file-display-area"></div>
+                
+                <!-- File Upload Section -->
+                <div class="file-upload-section">
+                    <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.txt" onchange="handleFileSelect()">
+                    <button class="btn-upload" onclick="document.getElementById('fileInput').click()" title="Upload file (PDF, Excel, Images)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        Upload File
+                    </button>
+                </div>
+                
+                <div class="chat-input-wrapper">
+                    <textarea id="messageInput" class="chat-input" placeholder="Ask me anything or upload a file..." rows="1"></textarea>
+                    <button class="btn-send" id="sendButton" onclick="sendMessage()">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3L9 4L14.3 9H3v2h11.3L9 16l1 1 7-7-7-7z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chat-input-footer">
+                    <span class="input-hint">
+                        <strong>Supported files:</strong> PDF (50MB), Excel/CSV (20MB), Images (10MB), Text (5MB)
+                    </span>
+                    <span class="creator-badge-input">by Anand Kathalewar</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+<!-- ITI Syllabus Database -->
+<script>
+const ITI_SYLLABUS_DATABASE = {
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2024-12-05",
+    "totalTrades": 170,
+    "source": "CSTAR Kolkata",
+    "baseUrl": "https://www.cstaricalcutta.gov.in/",
+    "statistics": {
+      "engineering": 88,
+      "nonEngineering": 76,
+      "visuallyImpaired": 5,
+      "coreSkills": 1
+    }
+  },
+  "trades": [
+    {
+      "id": "ampt",
+      "name": "Additive Manufacturing (3D) Printing Technician",
+      "code": "AMPT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Additive%20Mfg.%20(3D%20Printing)%20Tech._CTS3.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "ampt",
+        "manufacturing",
+        "engineering",
+        "technician",
+        "printing",
+        "additive",
+        "additive manufacturing (3d) printing technician",
+        "(3d)"
+      ]
+    },
+    {
+      "id": "asef",
+      "name": "Aeronautical Structure and Structural Fitter",
+      "code": "ASEF",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Aeronautical%20Structure%20and%20Eqpt%20Fitter_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "aeronautical structure and structural fitter",
+        "engineering",
+        "structure",
+        "structural",
+        "fitter",
+        "aeronautical",
+        "and",
+        "asef"
+      ]
+    },
+    {
+      "id": "adm",
+      "name": "Architectural Draughtsman",
+      "code": "ADM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Architectural%20Draughtsman_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "adm",
+        "engineering",
+        "draughtsman",
+        "architectural",
+        "architectural draughtsman"
+      ]
+    },
+    {
+      "id": "aocp",
+      "name": "Attendant Operator (Chemical Plant)",
+      "code": "AOCP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Attendant%20Operator%20(Chemical%20Plant)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "aocp",
+        "operator",
+        "plant)",
+        "attendant operator (chemical plant)",
+        "attendant",
+        "(chemical"
+      ]
+    },
+    {
+      "id": "camp",
+      "name": "Computer Aided Manufacturing (CAM) Programmar",
+      "code": "CAMP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/CAM%20Programmer_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "manufacturing",
+        "camp",
+        "engineering",
+        "programmar",
+        "(cam)",
+        "aided",
+        "computer",
+        "computer aided manufacturing (cam) programmar"
+      ]
+    },
+    {
+      "id": "cacpm",
+      "name": "Central Air Condition Plant Mechanic",
+      "code": "CACPM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Central%20AC%20Plant%20Mech._CTS%202.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "central",
+        "condition",
+        "central air condition plant mechanic",
+        "air",
+        "plant",
+        "cacpm"
+      ]
+    },
+    {
+      "id": "cea",
+      "name": "Civil Engineering Assistant",
+      "code": "CEA",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Civil%20Engineering%20Assistant_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "cea",
+        "civil",
+        "assistant",
+        "civil engineering assistant"
+      ]
+    },
+    {
+      "id": "cncmt",
+      "name": "CNC Machining Technician",
+      "code": "CNCMT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/CNC%20Machining%20Tech._CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "cncmt",
+        "engineering",
+        "technician",
+        "cnc",
+        "machining",
+        "cnc machining technician"
+      ]
+    },
+    {
+      "id": "dmc",
+      "name": "Draughtsman Civil",
+      "code": "DMC",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Draughtsman%20Civil_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "draughtsman",
+        "draughtsman civil",
+        "civil",
+        "dmc"
+      ]
+    },
+    {
+      "id": "dmm",
+      "name": "Draughtsman Mechanical",
+      "code": "DMM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/D_man%20Mechanical_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "mechanical",
+        "engineering",
+        "draughtsman",
+        "draughtsman mechanical",
+        "dmm"
+      ]
+    },
+    {
+      "id": "dpnt",
+      "name": "Domestic Painter",
+      "code": "DPNT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Domestic%20Painter_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "painter",
+        "engineering",
+        "domestic",
+        "domestic painter",
+        "dpnt"
+      ]
+    },
+    {
+      "id": "et",
+      "name": "Electrician",
+      "code": "ET",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Electrician_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "et",
+        "engineering",
+        "electrician"
+      ]
+    },
+    {
+      "id": "etpd",
+      "name": "Electrician - Power Distribution",
+      "code": "ETPD",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Electrician-Power%20Distribution_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "-",
+        "etpd",
+        "power",
+        "electrician",
+        "distribution",
+        "electrician - power distribution"
+      ]
+    },
+    {
+      "id": "etx",
+      "name": "Electronics Mechanic",
+      "code": "ETX",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Electronics%20Mechanic_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "electronics",
+        "electronics mechanic",
+        "etx"
+      ]
+    },
+    {
+      "id": "edest",
+      "name": "Engineering Design Technician",
+      "code": "EDEST",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Engineering%20Design%20Technician_CTS3.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "edest",
+        "engineering",
+        "technician",
+        "engineering design technician",
+        "design"
+      ]
+    },
+    {
+      "id": "ep",
+      "name": "Electroplater",
+      "code": "EP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Electroplater_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "electroplater",
+        "engineering",
+        "ep"
+      ]
+    },
+    {
+      "id": "ft",
+      "name": "Fitter",
+      "code": "FT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Fitter_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "ft",
+        "engineering",
+        "fitter"
+      ]
+    },
+    {
+      "id": "fpet",
+      "name": "Food Processing Equipment Technician",
+      "code": "FPET",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Food%20Processing%20Eqpt%20Tech_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "technician",
+        "equipment",
+        "food processing equipment technician",
+        "fpet",
+        "processing",
+        "food"
+      ]
+    },
+    {
+      "id": "frm",
+      "name": "Foundryman",
+      "code": "FRM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Foundryman_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "frm",
+        "foundryman"
+      ]
+    },
+    {
+      "id": "ghpt",
+      "name": "Green Hydrogen Production Technician",
+      "code": "GHPT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Green%20Hydrogen%20Production%20Tech_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "production",
+        "engineering",
+        "green hydrogen production technician",
+        "technician",
+        "ghpt",
+        "green",
+        "hydrogen"
+      ]
+    },
+    {
+      "id": "ictsm",
+      "name": "Information and Communication Technology Sytem Maintenance",
+      "code": "ICTSM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/ICTSM_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "technology",
+        "maintenance",
+        "engineering",
+        "information and communication technology sytem maintenance",
+        "communication",
+        "sytem",
+        "and",
+        "ictsm",
+        "information"
+      ]
+    },
+    {
+      "id": "imcp",
+      "name": "Instrument Mechanic Chemical Plant",
+      "code": "IMCP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/IM%20(CP)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "instrument",
+        "chemical",
+        "imcp",
+        "mechanic",
+        "engineering",
+        "instrument mechanic chemical plant",
+        "plant"
+      ]
+    },
+    {
+      "id": "ipnt",
+      "name": "Industrial Painter",
+      "code": "IPNT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Industrial%20Painter_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "industrial",
+        "painter",
+        "engineering",
+        "ipnt",
+        "industrial painter"
+      ]
+    },
+    {
+      "id": "irdmt",
+      "name": "Industrial Robotics and Digital Manufacturing Technician",
+      "code": "IRDMT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Ind%20Robotics%20and%20Digital%20Mfg%20Tech_CTS3.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "digital",
+        "industrial",
+        "manufacturing",
+        "engineering",
+        "industrial robotics and digital manufacturing technician",
+        "robotics",
+        "technician",
+        "irdmt",
+        "and"
+      ]
+    },
+    {
+      "id": "it",
+      "name": "Information Technology",
+      "code": "IT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Information_Technology_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "it",
+        "technology",
+        "engineering",
+        "information technology",
+        "information"
+      ]
+    },
+    {
+      "id": "im",
+      "name": "Instrument Mechanic",
+      "code": "IM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Instrument%20Mechanic_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "instrument",
+        "engineering",
+        "mechanic",
+        "im",
+        "instrument mechanic"
+      ]
+    },
+    {
+      "id": "ipla",
+      "name": "In-Plant Logistic Assistant",
+      "code": "IPLA",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/In%20Plant%20Logistics%20Assistant_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "ipla",
+        "in-plant",
+        "engineering",
+        "in-plant logistic assistant",
+        "logistic",
+        "assistant"
+      ]
+    },
+    {
+      "id": "idd",
+      "name": "Interior Design and Decoration",
+      "code": "IDD",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Interior%20Design%20and%20Decoration_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "idd",
+        "engineering",
+        "interior design and decoration",
+        "interior",
+        "decoration",
+        "and",
+        "design"
+      ]
+    },
+    {
+      "id": "lacp",
+      "name": "Laboratory Assistant Chemical Plant",
+      "code": "LACP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/LA%20(CP)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "laboratory",
+        "chemical",
+        "engineering",
+        "laboratory assistant chemical plant",
+        "plant",
+        "assistant",
+        "lacp"
+      ]
+    },
+    {
+      "id": "lem",
+      "name": "Lift and Escalator Mechanic",
+      "code": "LEM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Lift%20and%20Escalator%20Mechanic_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "lem",
+        "lift and escalator mechanic",
+        "lift",
+        "and",
+        "escalator"
+      ]
+    },
+    {
+      "id": "mam",
+      "name": "Mechanic Agriculture Machinery",
+      "code": "MAM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech.%20Agricultural%20Machinery_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "agriculture",
+        "engineering",
+        "mechanic",
+        "mechanic agriculture machinery",
+        "machinery",
+        "mam"
+      ]
+    },
+    {
+      "id": "mhg",
+      "name": "Machinist Grinder",
+      "code": "MHG",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Machinist%20Grinder_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "mhg",
+        "engineering",
+        "grinder",
+        "machinist",
+        "machinist grinder"
+      ]
+    },
+    {
+      "id": "mh",
+      "name": "Machinist",
+      "code": "MH",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Machinist_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mh",
+        "machinist"
+      ]
+    },
+    {
+      "id": "mmcp",
+      "name": "Maintenance Mechanic Chemical Plant",
+      "code": "MMCP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/MM%20(CP)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "chemical",
+        "maintenance mechanic chemical plant",
+        "mmcp",
+        "maintenance",
+        "mechanic",
+        "engineering",
+        "plant"
+      ]
+    },
+    {
+      "id": "mpca",
+      "name": "Manufacturing Process Control and Automation",
+      "code": "MPCA",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mfg%20Process%20Control%20%20Automation%20Tech._CTS3.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "manufacturing",
+        "engineering",
+        "manufacturing process control and automation",
+        "mpca",
+        "and",
+        "automation",
+        "control",
+        "process"
+      ]
+    },
+    {
+      "id": "meft",
+      "name": "Marine Engine Fitter",
+      "code": "MEFT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Marine%20Engine%20Fitter_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "marine",
+        "meft",
+        "fitter",
+        "engine",
+        "marine engine fitter"
+      ]
+    },
+    {
+      "id": "mft",
+      "name": "Marine Fitter",
+      "code": "MFT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Marine%20Fitter_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "mft",
+        "engineering",
+        "marine fitter",
+        "marine",
+        "fitter"
+      ]
+    },
+    {
+      "id": "msn",
+      "name": "Mason Building Constructor",
+      "code": "MSN",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mason%20(Building%20Constructor)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "building",
+        "msn",
+        "mason",
+        "mason building constructor",
+        "constructor"
+      ]
+    },
+    {
+      "id": "mabp",
+      "name": "Mechanic Auto Body Painting",
+      "code": "MABP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech.%20Auto%20Body%20Painting_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "mabp",
+        "body",
+        "engineering",
+        "mechanic",
+        "painting",
+        "auto",
+        "mechanic auto body painting"
+      ]
+    },
+    {
+      "id": "mabr",
+      "name": "Mechanic Auto Body Repair",
+      "code": "MABR",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech.%20Auto%20Body%20Repair_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "body",
+        "engineering",
+        "mechanic",
+        "mabr",
+        "auto",
+        "mechanic auto body repair",
+        "repair"
+      ]
+    },
+    {
+      "id": "maeetx",
+      "name": "Mechanic Auto Electrical and Electronics",
+      "code": "MAEETX",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech.%20Auto%20Electrical%20Electronics_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "maeetx",
+        "engineering",
+        "mechanic",
+        "electronics",
+        "mechanic auto electrical and electronics",
+        "auto",
+        "and",
+        "electrical"
+      ]
+    },
+    {
+      "id": "mcea",
+      "name": "Mechanic Consumer Electronic Appliances",
+      "code": "MCEA",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech%20Consumer%20Electronic%20Appliances_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "appliances",
+        "consumer",
+        "electronic",
+        "mcea",
+        "mechanic consumer electronic appliances"
+      ]
+    },
+    {
+      "id": "mev",
+      "name": "Mechanic Electric Vehicle",
+      "code": "MEV",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mechanic%20Electric%20Vehicle_CTS3.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "vehicle",
+        "mechanic electric vehicle",
+        "mev",
+        "electric"
+      ]
+    },
+    {
+      "id": "dsl",
+      "name": "Mechanic Diesel",
+      "code": "DSL",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mechanic%20Diesel_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "diesel",
+        "mechanic diesel",
+        "dsl"
+      ]
+    },
+    {
+      "id": "lpg",
+      "name": "Mechanic Lens/Prism Grinding",
+      "code": "LPG",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech.%20Lens-Prism%20Grinding_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "mechanic lens/prism grinding",
+        "lpg",
+        "engineering",
+        "mechanic",
+        "lens/prism",
+        "grinding"
+      ]
+    },
+    {
+      "id": "mmv",
+      "name": "Mechanic Motor Vehicle",
+      "code": "MMV",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mechanic%20Motor%20Vehicle_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "vehicle",
+        "mechanic motor vehicle",
+        "mmv",
+        "motor"
+      ]
+    },
+    {
+      "id": "mmtm",
+      "name": "Mechanic Machine Tool Mainternance",
+      "code": "MMTM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/MMTM_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "mmtm",
+        "tool",
+        "mechanic",
+        "engineering",
+        "machine",
+        "mechanic machine tool mainternance",
+        "mainternance"
+      ]
+    },
+    {
+      "id": "mmm",
+      "name": "Mechanic Mining Machinery",
+      "code": "MMM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech.%20Mining%20Machinery_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "mechanic mining machinery",
+        "machinery",
+        "mining",
+        "mmm"
+      ]
+    },
+    {
+      "id": "mtr",
+      "name": "Mechanic Tractor",
+      "code": "MTR",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mechanic%20Tractor_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "mtr",
+        "engineering",
+        "mechanic",
+        "tractor",
+        "mechanic tractor"
+      ]
+    },
+    {
+      "id": "mtw",
+      "name": "Mechanic Two Wheeler",
+      "code": "MTW",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Mech%20Two%20_%20Three%20Wheeler_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "mechanic",
+        "mechanic two wheeler",
+        "mtw",
+        "two",
+        "wheeler"
+      ]
+    },
+    {
+      "id": "oamt",
+      "name": "Operator Advanced Machine Tools",
+      "code": "OAMT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Operator%20Advanced%20Machine%20Tool_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "oamt",
+        "engineering",
+        "machine",
+        "operator",
+        "advanced",
+        "tools",
+        "operator advanced machine tools"
+      ]
+    },
+    {
+      "id": "pnt",
+      "name": "Painter General",
+      "code": "PNT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Painter%20(General)_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "general",
+        "painter",
+        "engineering",
+        "pnt",
+        "painter general"
+      ]
+    },
+    {
+      "id": "ppo",
+      "name": "Plastic Processing Operator",
+      "code": "PPO",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Plastic%20Processing%20Operator_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "plastic processing operator",
+        "engineering",
+        "ppo",
+        "plastic",
+        "operator",
+        "processing"
+      ]
+    },
+    {
+      "id": "plb",
+      "name": "Plumber",
+      "code": "PLB",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Plumber_CTS3.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "plumber",
+        "plb",
+        "engineering"
+      ]
+    },
+    {
+      "id": "pocm",
+      "name": "Pump Operator Cum Mechanic",
+      "code": "POCM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Pump%20Operator%20cum%20Mech_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "cum",
+        "engineering",
+        "mechanic",
+        "operator",
+        "pocm",
+        "pump operator cum mechanic",
+        "pump"
+      ]
+    },
+    {
+      "id": "reft",
+      "name": "Refractory Technician",
+      "code": "REFT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Refractory%20Technician_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "refractory technician",
+        "technician",
+        "reft",
+        "refractory"
+      ]
+    },
+    {
+      "id": "ract",
+      "name": "Refrigeration and Air Conditioning Technician",
+      "code": "RACT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Ref%20and%20Air%20Conditioning%20Tech._CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "ract",
+        "and",
+        "technician",
+        "conditioning",
+        "refrigeration and air conditioning technician",
+        "refrigeration",
+        "air"
+      ]
+    },
+    {
+      "id": "rubt",
+      "name": "Rubber Technician",
+      "code": "RUBT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Rubber%20Technician_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "rubber technician",
+        "technician",
+        "rubt",
+        "rubber"
+      ]
+    },
+    {
+      "id": "stech",
+      "name": "Semiconductor Technician",
+      "code": "STECH",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "4.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Semiconductor%20Tech_CTS1.0_NSQF-4.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "stech",
+        "technician",
+        "semiconductor technician",
+        "semiconductor"
+      ]
+    },
+    {
+      "id": "smw",
+      "name": "Sheet Metal Worker",
+      "code": "SMW",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Sheet%20Metal%20Worker_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "smw",
+        "sheet metal worker",
+        "sheet",
+        "metal",
+        "worker"
+      ]
+    },
+    {
+      "id": "shppt",
+      "name": "Small Hydro Power Plant Technician",
+      "code": "SHPPT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Small%20Hydro%20Power%20Plant%20Tech_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "small",
+        "engineering",
+        "technician",
+        "small hydro power plant technician",
+        "hydro",
+        "power",
+        "plant",
+        "shppt"
+      ]
+    },
+    {
+      "id": "stet",
+      "name": "Solar Technician Electrical",
+      "code": "STET",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Solar%20Technician%20(Electrical)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "technician",
+        "solar technician electrical",
+        "stet",
+        "electrical",
+        "solar"
+      ]
+    },
+    {
+      "id": "sptech",
+      "name": "Spinning Technician",
+      "code": "SPTECH",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Spinning%20Technician_CTS%202.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "technician",
+        "spinning",
+        "spinning technician",
+        "sptech"
+      ]
+    },
+    {
+      "id": "spmo",
+      "name": "Stone Processing Machine Operator",
+      "code": "SPMO",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Stone%20Processing%20Machine%20Operator_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "machine",
+        "stone processing machine operator",
+        "operator",
+        "stone",
+        "spmo",
+        "processing"
+      ]
+    },
+    {
+      "id": "smmo",
+      "name": "Stone Mining Machine Operator",
+      "code": "SMMO",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Stone%20Mining%20Machine%20Operator_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "smmo",
+        "machine",
+        "stone mining machine operator",
+        "operator",
+        "stone",
+        "mining"
+      ]
+    },
+    {
+      "id": "syr",
+      "name": "Surveyor",
+      "code": "SYR",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Surveyor_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "syr",
+        "surveyor"
+      ]
+    },
+    {
+      "id": "tld(dm)",
+      "name": "Tool and Die Maker (Die and Moulds)",
+      "code": "TLD(DM)",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/TDM%20(D_M)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "maker",
+        "moulds)",
+        "tld(dm)",
+        "tool",
+        "engineering",
+        "die",
+        "and",
+        "tool and die maker (die and moulds)",
+        "(die"
+      ]
+    },
+    {
+      "id": "tld(jf)",
+      "name": "Tool and Die Maker (Press tools, Jigs and Fixture)",
+      "code": "TLD(JF)",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/TDM%20(PTJ_F)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "maker",
+        "fixture)",
+        "jigs",
+        "tool",
+        "engineering",
+        "die",
+        "(press",
+        "tool and die maker (press tools, jigs and fixture)",
+        "and",
+        "tools,",
+        "tld(jf)"
+      ]
+    },
+    {
+      "id": "tesdr",
+      "name": "Technician Electronics System Design and Repair",
+      "code": "TESDR",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Tech.%20Electronics%20Sys%20Dsgn%20and%20Repair_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "electronics",
+        "technician",
+        "tesdr",
+        "system",
+        "and",
+        "design",
+        "technician electronics system design and repair",
+        "repair"
+      ]
+    },
+    {
+      "id": "tmdetx",
+      "name": "Technician Medicine Electronics",
+      "code": "TMDETX",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Tech.%20Medical%20Electronics_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "electronics",
+        "technician medicine electronics",
+        "technician",
+        "medicine",
+        "tmdetx"
+      ]
+    },
+    {
+      "id": "tmchetx",
+      "name": "Technician Mechatronics",
+      "code": "TMCHETX",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Technician%20Mechatronics_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "mechatronics",
+        "engineering",
+        "technician",
+        "tmchetx",
+        "technician mechatronics"
+      ]
+    },
+    {
+      "id": "tpes",
+      "name": "Technician Power Electronics System",
+      "code": "TPES",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Tech.%20Power%20Electronic%20Systems_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "tpes",
+        "engineering",
+        "electronics",
+        "technician",
+        "technician power electronics system",
+        "system",
+        "power"
+      ]
+    },
+    {
+      "id": "txmetx",
+      "name": "Textile Mechatronics",
+      "code": "TXMETX",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Textile%20Mechatronics_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "txmetx",
+        "mechatronics",
+        "engineering",
+        "textile",
+        "textile mechatronics"
+      ]
+    },
+    {
+      "id": "twpt",
+      "name": "Textile Wet Processing Technician",
+      "code": "TWPT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Textile%20Wet%20Processing%20Tech_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "textile",
+        "textile wet processing technician",
+        "technician",
+        "wet",
+        "twpt",
+        "processing"
+      ]
+    },
+    {
+      "id": "tr",
+      "name": "Turner",
+      "code": "TR",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Turner_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "turner",
+        "engineering",
+        "tr"
+      ]
+    },
+    {
+      "id": "vn",
+      "name": "Vessel Navigator",
+      "code": "VN",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Vessel%20Navigator_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "vessel",
+        "vessel navigator",
+        "vn",
+        "navigator"
+      ]
+    },
+    {
+      "id": "vad",
+      "name": "Virtual Analysis and Designer",
+      "code": "VAD",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Virtual%20Analysis%20and%20Desiger-FEM_CTS3.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "analysis",
+        "designer",
+        "engineering",
+        "vad",
+        "and",
+        "virtual",
+        "virtual analysis and designer"
+      ]
+    },
+    {
+      "id": "wht",
+      "name": "Warehouse Technician",
+      "code": "WHT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Warehouse%20Technician_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "warehouse",
+        "engineering",
+        "wht",
+        "technician",
+        "warehouse technician"
+      ]
+    },
+    {
+      "id": "wd",
+      "name": "Welder",
+      "code": "WD",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Welder_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "wd",
+        "engineering",
+        "welder"
+      ]
+    },
+    {
+      "id": "wdg",
+      "name": "Welder GMAW and GTAW",
+      "code": "WDG",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Welder%20(GMAW%20_%20GTAW)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "wdg",
+        "welder gmaw and gtaw",
+        "gmaw",
+        "welder",
+        "engineering",
+        "gtaw",
+        "and"
+      ]
+    },
+    {
+      "id": "wdp",
+      "name": "Welder Pipe",
+      "code": "WDP",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Welder%20(Pipe)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "welder",
+        "welder pipe",
+        "wdp",
+        "pipe"
+      ]
+    },
+    {
+      "id": "wds",
+      "name": "Welder Structural",
+      "code": "WDS",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Welder%20(Structural)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "welder",
+        "welder structural",
+        "structural",
+        "wds"
+      ]
+    },
+    {
+      "id": "wdf",
+      "name": "Welder Fabrication and Fitting",
+      "code": "WDF",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Welder%20(Fabrication%20_%20Fitting)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "fabrication",
+        "fitting",
+        "engineering",
+        "welder",
+        "wdf",
+        "and",
+        "welder fabrication and fitting"
+      ]
+    },
+    {
+      "id": "wdwi",
+      "name": "Welder Welding and Inspection",
+      "code": "WDWI",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Welder%20(Welding%20and%20Inspection)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "engineering",
+        "welder",
+        "inspection",
+        "welder welding and inspection",
+        "welding",
+        "wdwi",
+        "and"
+      ]
+    },
+    {
+      "id": "wvt",
+      "name": "Weaving Technician",
+      "code": "WVT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Weaving%20Technician_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "weaving",
+        "engineering",
+        "technician",
+        "weaving technician",
+        "wvt"
+      ]
+    },
+    {
+      "id": "wm",
+      "name": "Wireman",
+      "code": "WM",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Wireman_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "wm",
+        "wireman",
+        "engineering"
+      ]
+    },
+    {
+      "id": "wpt",
+      "name": "Wind Plant Technician",
+      "code": "WPT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Wind%20Plant%20Technician_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "engineering",
+        "wpt",
+        "wind plant technician",
+        "technician",
+        "wind",
+        "plant"
+      ]
+    },
+    {
+      "id": "wwt",
+      "name": "Wood Work Technician",
+      "code": "WWT",
+      "category": "Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Wood%20Work%20Technician_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "wood",
+        "engineering",
+        "technician",
+        "wood work technician",
+        "work",
+        "wwt"
+      ]
+    },
+    {
+      "id": "agp",
+      "name": "Agro Processing",
+      "code": "AGP",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Agro%20Processing_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "agp",
+        "agro",
+        "non engineering",
+        "agro processing",
+        "processing"
+      ]
+    },
+    {
+      "id": "aipa",
+      "name": "Artificial Intelligence Programming Assistant",
+      "code": "AIPA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/AI%20Programming%20Asst._CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "intelligence",
+        "artificial intelligence programming assistant",
+        "aipa",
+        "programming",
+        "artificial",
+        "non engineering",
+        "assistant"
+      ]
+    },
+    {
+      "id": "5gnt",
+      "name": "5G Network Technician",
+      "code": "5GNT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "4.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/5G_Network_Technician_CTS1.0_NSQF-4.5.pdf",
+      "searchKeywords": [
+        "5gnt",
+        "network",
+        "5g network technician",
+        "technician",
+        "5g",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "bac",
+      "name": "Baker and Confectioner",
+      "code": "BAC",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Baker%20and%20Confectioner_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "baker",
+        "confectioner",
+        "non engineering",
+        "bac",
+        "and",
+        "baker and confectioner"
+      ]
+    },
+    {
+      "id": "bw",
+      "name": "Bamboo Works",
+      "code": "BW",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Bamboo%20Works_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "bw",
+        "works",
+        "bamboo works",
+        "non engineering",
+        "bamboo"
+      ]
+    },
+    {
+      "id": "bpa",
+      "name": "Basohli Painting Artist",
+      "code": "BPA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Basohli%20Painting%20Artist_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "basohli painting artist",
+        "basohli",
+        "painting",
+        "bpa",
+        "artist",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "cwah",
+      "name": "Carpet Weaving Artisan Handloom",
+      "code": "CWAH",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Carpet%20Weaving%20Artisan-Handloom_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "weaving",
+        "artisan",
+        "carpet weaving artisan handloom",
+        "carpet",
+        "non engineering",
+        "handloom",
+        "cwah"
+      ]
+    },
+    {
+      "id": "cmtl",
+      "name": "Cosmetology",
+      "code": "CMTL",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Cosmetology_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "cosmetology",
+        "cmtl",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "cha",
+      "name": "Catering and Hospitality Assistant",
+      "code": "CHA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Catering%20and%20Hospitality%20Asst_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "cha",
+        "catering",
+        "catering and hospitality assistant",
+        "non engineering",
+        "hospitality",
+        "and",
+        "assistant"
+      ]
+    },
+    {
+      "id": "caed",
+      "name": "Computer Aided Embroidery and Designing",
+      "code": "CAED",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/CAED_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "embroidery",
+        "caed",
+        "aided",
+        "computer aided embroidery and designing",
+        "computer",
+        "non engineering",
+        "designing",
+        "and"
+      ]
+    },
+    {
+      "id": "chnm",
+      "name": "Computer Hardware and Network Maintenance",
+      "code": "CHNM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/CHNM_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "network",
+        "chnm",
+        "hardware",
+        "maintenance",
+        "computer",
+        "non engineering",
+        "computer hardware and network maintenance",
+        "and"
+      ]
+    },
+    {
+      "id": "copa",
+      "name": "Computer Operator and Programming Assistant",
+      "code": "COPA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/COPA_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "computer",
+        "copa",
+        "operator",
+        "non engineering",
+        "computer operator and programming assistant",
+        "programming",
+        "and",
+        "assistant"
+      ]
+    },
+    {
+      "id": "csa",
+      "name": "Cyber Security Assistant",
+      "code": "CSA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Cyber_Security_Assistant_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "csa",
+        "security",
+        "cyber",
+        "non engineering",
+        "assistant",
+        "cyber security assistant"
+      ]
+    },
+    {
+      "id": "dry",
+      "name": "Dairying",
+      "code": "DRY",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Dairying_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "dairying",
+        "dry",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "daa",
+      "name": "Data Annotation Assistant",
+      "code": "DAA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Data%20Annotation%20Asst._CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "annotation",
+        "daa",
+        "data",
+        "data annotation assistant",
+        "non engineering",
+        "assistant"
+      ]
+    },
+    {
+      "id": "deo",
+      "name": "Data Entry Operator",
+      "code": "DEO",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Data%20Entry%20Operator_CTS2.0%20NSQF-3.pdf",
+      "searchKeywords": [
+        "entry",
+        "data",
+        "operator",
+        "deo",
+        "non engineering",
+        "data entry operator"
+      ]
+    },
+    {
+      "id": "dsa",
+      "name": "Database System Assistant",
+      "code": "DSA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "4.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Database%20System%20Assistant_CTS2.0_NSQF-4.5.pdf",
+      "searchKeywords": [
+        "dsa",
+        "database",
+        "system",
+        "non engineering",
+        "assistant",
+        "database system assistant"
+      ]
+    },
+    {
+      "id": "dlet",
+      "name": "Dental Labortory Equipment Technician",
+      "code": "DLET",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Dental%20Lab%20Eqpt%20Tech_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "dental labortory equipment technician",
+        "technician",
+        "equipment",
+        "labortory",
+        "dlet",
+        "non engineering",
+        "dental"
+      ]
+    },
+    {
+      "id": "dtpo",
+      "name": "Desk Top Publishing Operator",
+      "code": "DTPO",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/DTPO_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "desk",
+        "dtpo",
+        "publishing",
+        "desk top publishing operator",
+        "top",
+        "operator",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "dgph",
+      "name": "Digital Photographer",
+      "code": "DGPH",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Digital%20Photographer_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "digital photographer",
+        "digital",
+        "dgph",
+        "non engineering",
+        "photographer"
+      ]
+    },
+    {
+      "id": "dm",
+      "name": "Dress Making",
+      "code": "DM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Dress%20Making_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "dm",
+        "dress making",
+        "making",
+        "dress",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "dcm",
+      "name": "Driver cum Mechanic (LMV)",
+      "code": "DCM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "2.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Driver%20Cum%20Mech%20(LMV)_CTS2.0_NSQF-2.pdf",
+      "searchKeywords": [
+        "cum",
+        "dcm",
+        "driver cum mechanic (lmv)",
+        "mechanic",
+        "(lmv)",
+        "non engineering",
+        "driver"
+      ]
+    },
+    {
+      "id": "dp",
+      "name": "Drone Pilot (Junior)",
+      "code": "DP",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Drone%20Pilot%20(Junior)_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "(junior)",
+        "drone pilot (junior)",
+        "dp",
+        "non engineering",
+        "pilot",
+        "drone"
+      ]
+    },
+    {
+      "id": "dt",
+      "name": "Drone Technician",
+      "code": "DT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Drone%20Technician_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "dt",
+        "drone technician",
+        "technician",
+        "non engineering",
+        "drone"
+      ]
+    },
+    {
+      "id": "ece",
+      "name": "Early Childhood Educator",
+      "code": "ECE",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Early%20Childhood%20Educator_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "ece",
+        "educator",
+        "non engineering",
+        "childhood",
+        "early childhood educator",
+        "early"
+      ]
+    },
+    {
+      "id": "fdt",
+      "name": "Fashion Design and Technology",
+      "code": "FDT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Fashion%20Design%20and%20Technology_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "fdt",
+        "technology",
+        "fashion",
+        "non engineering",
+        "and",
+        "design",
+        "fashion design and technology"
+      ]
+    },
+    {
+      "id": "fht",
+      "name": "Fiber to Home Technician",
+      "code": "FHT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Fiber%20to%20Home%20Technician_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "fht",
+        "home",
+        "to",
+        "technician",
+        "fiber to home technician",
+        "fiber",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "fex",
+      "name": "Finance Executive",
+      "code": "FEX",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Finance%20Executive_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "executive",
+        "fex",
+        "finance executive",
+        "non engineering",
+        "finance"
+      ]
+    },
+    {
+      "id": "ftism",
+      "name": "Fire Technology and Industrial Safety Management",
+      "code": "FTISM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Fire%20Tech%20and%20Ind.%20Safety%20Mgmt_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "industrial",
+        "technology",
+        "fire technology and industrial safety management",
+        "fire",
+        "safety",
+        "management",
+        "non engineering",
+        "and",
+        "ftism"
+      ]
+    },
+    {
+      "id": "fm",
+      "name": "Fireman",
+      "code": "FM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Fireman_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "fireman",
+        "fm",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "fl",
+      "name": "Floriculture and Landscaping",
+      "code": "FL",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Floriculture%20and%20Landscaping_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "floriculture",
+        "landscaping",
+        "non engineering",
+        "and",
+        "fl",
+        "floriculture and landscaping"
+      ]
+    },
+    {
+      "id": "fbsa",
+      "name": "Food and Beverages Service Assistant",
+      "code": "FBSA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Food%20and%20Beverages%20Service%20Asst_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "service",
+        "food and beverages service assistant",
+        "non engineering",
+        "beverages",
+        "and",
+        "fbsa",
+        "assistant",
+        "food"
+      ]
+    },
+    {
+      "id": "fb",
+      "name": "Food Beverage",
+      "code": "FB",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Food%20Beverage_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "food beverage",
+        "fb",
+        "non engineering",
+        "beverage",
+        "food"
+      ]
+    },
+    {
+      "id": "fpg",
+      "name": "Food Production General",
+      "code": "FPG",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Food%20Production%20(General)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "production",
+        "general",
+        "food production general",
+        "fpg",
+        "non engineering",
+        "food"
+      ]
+    },
+    {
+      "id": "fwp",
+      "name": "Footwear Maker",
+      "code": "FWP",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Footwear%20Maker_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "maker",
+        "footwear",
+        "footwear maker",
+        "fwp",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "foa",
+      "name": "Front Office Assistant",
+      "code": "FOA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Front%20Office%20Assistant_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "front office assistant",
+        "front",
+        "office",
+        "foa",
+        "non engineering",
+        "assistant"
+      ]
+    },
+    {
+      "id": "fvp",
+      "name": "Fruit and Vegetables Processing",
+      "code": "FVP",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Fruits%20and%20Vegetables%20Processing_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "fruit",
+        "vegetables",
+        "non engineering",
+        "fvp",
+        "fruit and vegetables processing",
+        "and",
+        "processing"
+      ]
+    },
+    {
+      "id": "gia",
+      "name": "Geo-Informatics Assistant",
+      "code": "GIA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "4.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Geo-Informatics%20Assistant_CTS2.0_NSQF-4.5.pdf",
+      "searchKeywords": [
+        "gia",
+        "geo-informatics assistant",
+        "non engineering",
+        "geo-informatics",
+        "assistant"
+      ]
+    },
+    {
+      "id": "goac",
+      "name": "Geriatric Old Age Care",
+      "code": "GOAC",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Geriatric%20(Old%20Age)%20Care_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "geriatric",
+        "goac",
+        "geriatric old age care",
+        "non engineering",
+        "old",
+        "age",
+        "care"
+      ]
+    },
+    {
+      "id": "hea",
+      "name": "Hand Embroidery Artisan",
+      "code": "HEA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/HandEmbroidery%20Artisan_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "embroidery",
+        "hand embroidery artisan",
+        "artisan",
+        "hea",
+        "hand",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "hse",
+      "name": "Health Safety and Environment",
+      "code": "HSE",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Health%20Safety%20and%20Environment_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "hse",
+        "environment",
+        "safety",
+        "non engineering",
+        "health safety and environment",
+        "and",
+        "health"
+      ]
+    },
+    {
+      "id": "hsi",
+      "name": "Health Sanitary Inspector",
+      "code": "HSI",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Health%20Sanitary%20Inspector_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "health sanitary inspector",
+        "sanitary",
+        "inspector",
+        "hsi",
+        "non engineering",
+        "health"
+      ]
+    },
+    {
+      "id": "hpt",
+      "name": "Honey Processing Technician",
+      "code": "HPT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Honey%20Processing%20Technician_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "honey",
+        "technician",
+        "honey processing technician",
+        "non engineering",
+        "hpt",
+        "processing"
+      ]
+    },
+    {
+      "id": "hc",
+      "name": "Horticulture",
+      "code": "HC",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Horticulture_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "hc",
+        "horticulture",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "hhsk",
+      "name": "Hospital Housekeeping",
+      "code": "HHSK",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Hospital%20Housekeeping_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "hospital",
+        "hospital housekeeping",
+        "housekeeping",
+        "hhsk",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "hkpr",
+      "name": "Housekeeper",
+      "code": "HKPR",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Housekeeper_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "non engineering",
+        "hkpr",
+        "housekeeper"
+      ]
+    },
+    {
+      "id": "hrex",
+      "name": "Human Resource Executive",
+      "code": "HREX",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Human%20Resource%20Executive_CTS%202.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "executive",
+        "hrex",
+        "human resource executive",
+        "human",
+        "resource",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "iiot",
+      "name": "Industrial IoT Technician",
+      "code": "IIOT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Industrial%20IoT%20Tech_CTS1.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "iiot",
+        "industrial",
+        "industrial iot technician",
+        "technician",
+        "non engineering",
+        "iot"
+      ]
+    },
+    {
+      "id": "iotsa",
+      "name": "IoT Technician Smart Agriculture",
+      "code": "IOTSA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/IoT%20Tech.%20(Smart%20Agriculture)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "agriculture",
+        "iot technician smart agriculture",
+        "iotsa",
+        "smart",
+        "technician",
+        "non engineering",
+        "iot"
+      ]
+    },
+    {
+      "id": "iotsc",
+      "name": "IoT Technician Smart City",
+      "code": "IOTSC",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/IoT%20Technician%20(Smart%20City)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "city",
+        "smart",
+        "technician",
+        "iotsc",
+        "non engineering",
+        "iot",
+        "iot technician smart city"
+      ]
+    },
+    {
+      "id": "iotsh",
+      "name": "IoT Technician Smart Healthcare",
+      "code": "IOTSH",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/IoT%20Tech.%20(Smart%20Healthcare)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "smart",
+        "technician",
+        "iotsh",
+        "healthcare",
+        "non engineering",
+        "iot",
+        "iot technician smart healthcare"
+      ]
+    },
+    {
+      "id": "lgm",
+      "name": "Leather Goods Maker",
+      "code": "LGM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Leather%20Goods%20Maker_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "maker",
+        "goods",
+        "leather goods maker",
+        "lgm",
+        "non engineering",
+        "leather"
+      ]
+    },
+    {
+      "id": "mex",
+      "name": "Marketing Excutive",
+      "code": "MEX",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Marketing%20Executive_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "excutive",
+        "mex",
+        "marketing",
+        "marketing excutive",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "mmpt",
+      "name": "Milk and Milk Product Technician",
+      "code": "MMPT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Milk%20_%20Milk%20Product%20Technician_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "product",
+        "mmpt",
+        "technician",
+        "milk",
+        "milk and milk product technician",
+        "non engineering",
+        "and"
+      ]
+    },
+    {
+      "id": "mase",
+      "name": "Multimedia Animation and Special Effects",
+      "code": "MASE",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/MASE_CTS2.0%20NSQF-3.5.pdf",
+      "searchKeywords": [
+        "mase",
+        "multimedia",
+        "multimedia animation and special effects",
+        "non engineering",
+        "effects",
+        "and",
+        "animation",
+        "special"
+      ]
+    },
+    {
+      "id": "not",
+      "name": "Nursery and Orchard Technician",
+      "code": "NOT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/NurseryOrchard%20Tech_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "technician",
+        "nursery",
+        "non engineering",
+        "not",
+        "and",
+        "nursery and orchard technician",
+        "orchard"
+      ]
+    },
+    {
+      "id": "pma",
+      "name": "Papier Mache Artisan",
+      "code": "PMA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Papier%20Mache%20Artisan_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "pma",
+        "artisan",
+        "papier",
+        "mache",
+        "non engineering",
+        "papier mache artisan"
+      ]
+    },
+    {
+      "id": "php",
+      "name": "Photographer",
+      "code": "PHP",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Photographer_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "non engineering",
+        "php",
+        "photographer"
+      ]
+    },
+    {
+      "id": "phyt",
+      "name": "Physiotherapy Technician",
+      "code": "PHYT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Physiotherapy%20Technician_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "technician",
+        "phyt",
+        "physiotherapy",
+        "non engineering",
+        "physiotherapy technician"
+      ]
+    },
+    {
+      "id": "rdt",
+      "name": "Radiology Technician",
+      "code": "RDT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Radiology%20Technician_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "rdt",
+        "radiology",
+        "technician",
+        "radiology technician",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "spe",
+      "name": "Secretarial Practice English",
+      "code": "SPE",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Secretarial%20Practice%20(English)_CTS%202.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "secretarial",
+        "english",
+        "practice",
+        "non engineering",
+        "spe",
+        "secretarial practice english"
+      ]
+    },
+    {
+      "id": "st",
+      "name": "Sewing Technology",
+      "code": "ST",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Sewing%20Technology_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "sewing",
+        "technology",
+        "st",
+        "sewing technology",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "swa",
+      "name": "Shawl Weaving Artisan",
+      "code": "SWA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Shawl%20Weaving%20Artisan_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "swa",
+        "shawl",
+        "weaving",
+        "artisan",
+        "non engineering",
+        "shawl weaving artisan"
+      ]
+    },
+    {
+      "id": "stat",
+      "name": "Smartphone Technician cum App Tester",
+      "code": "STAT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "6 Months",
+      "nsqfLevel": "3.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Smartphone%20Tech.%20cum%20App%20Tester_CTS2.0_NSQF-3.pdf",
+      "searchKeywords": [
+        "cum",
+        "smartphone technician cum app tester",
+        "app",
+        "smartphone",
+        "technician",
+        "tester",
+        "non engineering",
+        "stat"
+      ]
+    },
+    {
+      "id": "stas",
+      "name": "Software Testing Assistant",
+      "code": "STAS",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "4.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Software%20Testing%20Assistant_CTS2.0_NSQF-4.5.pdf",
+      "searchKeywords": [
+        "stas",
+        "software testing assistant",
+        "testing",
+        "software",
+        "non engineering",
+        "assistant"
+      ]
+    },
+    {
+      "id": "stct",
+      "name": "Soil Testing and Crop Technician",
+      "code": "STCT",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Soil%20Testing%20and%20Crop%20Tech_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "soil testing and crop technician",
+        "testing",
+        "technician",
+        "soil",
+        "stct",
+        "non engineering",
+        "and",
+        "crop"
+      ]
+    },
+    {
+      "id": "spth",
+      "name": "Spa Therapy",
+      "code": "SPTH",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Spa%20Therapy_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "spa",
+        "therapy",
+        "spa therapy",
+        "spth",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "ssae",
+      "name": "Stenographer Secretarial Assistant English",
+      "code": "SSAE",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Stenographer%20Sec.%20Asst%20(Eng)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "secretarial",
+        "non engineering",
+        "ssae",
+        "english",
+        "stenographer",
+        "assistant",
+        "stenographer secretarial assistant english"
+      ]
+    },
+    {
+      "id": "ssah",
+      "name": "Stenographer Secretarial Assistant Hindi",
+      "code": "SSAH",
+      "category": "Non Engineering",
+      "language": "Hindi",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Stenographer%20Sec.%20Asst%20(Hindi)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "hindi",
+        "secretarial",
+        "non engineering",
+        "ssah",
+        "stenographer",
+        "stenographer secretarial assistant hindi",
+        "assistant"
+      ]
+    },
+    {
+      "id": "sote",
+      "name": "Surface Ornamentation Techniques Embroidery",
+      "code": "SOTE",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Surface%20Ornamnt%20Tech%20(Emb.)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "embroidery",
+        "surface",
+        "ornamentation",
+        "techniques",
+        "sote",
+        "non engineering",
+        "surface ornamentation techniques embroidery"
+      ]
+    },
+    {
+      "id": "tg",
+      "name": "Tourist Guide",
+      "code": "TG",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Tourist%20Guide_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "tourist guide",
+        "tourist",
+        "tg",
+        "non engineering",
+        "guide"
+      ]
+    },
+    {
+      "id": "tpa",
+      "name": "Traditional Phulkari Artisan",
+      "code": "TPA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Traditional%20Phulkari%20Artisan_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "traditional phulkari artisan",
+        "artisan",
+        "tpa",
+        "traditional",
+        "phulkari",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "tta",
+      "name": "Travel and Tour Assistant",
+      "code": "TTA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Travel%20and%20Tour%20Assistant_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "travel and tour assistant",
+        "tour",
+        "non engineering",
+        "assistant",
+        "and",
+        "tta",
+        "travel"
+      ]
+    },
+    {
+      "id": "vcm",
+      "name": "Video Cameraman",
+      "code": "VCM",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Video%20Cameraman_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "video cameraman",
+        "video",
+        "cameraman",
+        "vcm",
+        "non engineering"
+      ]
+    },
+    {
+      "id": "wtswf",
+      "name": "Weaving Technician for Silk and Woven Fabrics",
+      "code": "WTSWF",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Weaving%20Tech.%20for%20Silk%20and%20Woolen%20Fabrics_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "weaving",
+        "for",
+        "silk",
+        "fabrics",
+        "technician",
+        "weaving technician for silk and woven fabrics",
+        "non engineering",
+        "woven",
+        "and",
+        "wtswf"
+      ]
+    },
+    {
+      "id": "wca",
+      "name": "Wood Carving Artisan",
+      "code": "WCA",
+      "category": "Non Engineering",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Wood%20Carving%20Artisan_CTS1.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "wood",
+        "artisan",
+        "wood carving artisan",
+        "carving",
+        "non engineering",
+        "wca"
+      ]
+    },
+    {
+      "id": "vi-copa",
+      "name": "Computer Operator and Programming Assistant-VI",
+      "code": "VI-COPA",
+      "category": "Visually Impaired",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/COPA%20(VI_OD)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "computer",
+        "computer operator and programming assistant-vi",
+        "vi-copa",
+        "operator",
+        "programming",
+        "visually impaired",
+        "and",
+        "assistant-vi"
+      ]
+    },
+    {
+      "id": "vi-cs",
+      "name": "Cutting and Sewing-VI",
+      "code": "VI-CS",
+      "category": "Visually Impaired",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "2.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Cutting%20and%20Sewing%20(VI%20OD)_CTS2.0_NSQF-2.5.pdf",
+      "searchKeywords": [
+        "cutting and sewing-vi",
+        "sewing-vi",
+        "vi-cs",
+        "cutting",
+        "visually impaired",
+        "and"
+      ]
+    },
+    {
+      "id": "vi-dtp",
+      "name": "Desktop Publishing Operator-VI",
+      "code": "VI-DTP",
+      "category": "Visually Impaired",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/DTPO%20(VI_OD)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "desktop",
+        "vi-dtp",
+        "publishing",
+        "desktop publishing operator-vi",
+        "operator-vi",
+        "visually impaired"
+      ]
+    },
+    {
+      "id": "vi-hsc",
+      "name": "Hair and Skin Care-VI",
+      "code": "VI-HSC",
+      "category": "Visually Impaired",
+      "language": "English",
+      "duration": "1 Year",
+      "nsqfLevel": "3.5",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Hair%20and%20Skin%20Care%20(VI_OD)_CTS2.0_NSQF-3.5.pdf",
+      "searchKeywords": [
+        "skin",
+        "vi-hsc",
+        "hair and skin care-vi",
+        "hair",
+        "care-vi",
+        "visually impaired",
+        "and"
+      ]
+    },
+    {
+      "id": "vi-mca",
+      "name": "Metal Cutting Attendant-VI",
+      "code": "VI-MCA",
+      "category": "Visually Impaired",
+      "language": "English",
+      "duration": "2 Year",
+      "nsqfLevel": "4.0",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Metal%20Cutting%20Attendant%20(VI)_CTS2.0_NSQF-4.pdf",
+      "searchKeywords": [
+        "cutting",
+        "visually impaired",
+        "vi-mca",
+        "metal cutting attendant-vi",
+        "metal",
+        "attendant-vi"
+      ]
+    },
+    {
+      "id": "es",
+      "name": "Employability Skills",
+      "code": "ES",
+      "category": "CORE SKILLS",
+      "language": "English",
+      "duration": "N/A",
+      "nsqfLevel": "N/A",
+      "syllabusUrl": "https://www.cstaricalcutta.gov.in/images/Employability_Skills_Curriculum.pdf",
+      "searchKeywords": [
+        "skills",
+        "employability skills",
+        "core skills",
+        "es",
+        "employability"
+      ]
+    }
+  ]
+};
+</script>
+</body>
+</html>
