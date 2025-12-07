@@ -135,6 +135,57 @@
         .upload-hint strong {
             color: #94a3b8;
         }
+        /* ==================== ITI ADMISSION BUTTON STYLES ====================
+   ADD THIS BEFORE </style> TAG (before line 138 in index.html)
+   ================================================================== */
+
+/* Admission Button - Purple Gradient */
+.admission-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    position: relative;
+}
+
+.admission-button:hover {
+    background: linear-gradient(135deg, #7c8ef5 0%, #8b5cb8 100%) !important;
+    transform: translateX(4px);
+}
+
+/* Nagpur Badge */
+.admission-button .admission-badge {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+/* Active Mode - Pink Gradient with Pulse */
+.admission-mode-active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+}
+
+.admission-mode-active::before {
+    content: '●';
+    position: absolute;
+    left: 12px;
+    color: #4ade80;
+    font-size: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+/* ==================== END OF ADMISSION STYLES ==================== */
     </style>
 <!-- Libraries for file text extraction -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
