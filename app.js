@@ -89,6 +89,7 @@ const AppState = {
     isLoggedIn: false,
     itiDatabase: null,
     uploadedFiles: [], // Track uploaded files
+	admissionMode: false,
     currentFileData: null // Current file being processed
 };
 // ========== LOAD SYLLABUS DATABASE INTO APPSTATE ==========
@@ -1583,7 +1584,12 @@ You are helpful, friendly, encouraging, and accurate. Support ITI instructors an
                 const dbContext = `\n\nAvailable ITI Information:\n${JSON.stringify(AppState.itiDatabase, null, 2)}`;
                 context += dbContext;
             }
-            
+           // Add admission database context if in admission mode
+            if (AppState.admissionMode && window.AdmissionQueryEngine) {
+                const admissionContext = AdmissionQueryEngine.generateAIContext();
+                context += '\n\n' + admissionContext;
+                context += '\n\n🎓 ADMISSION MODE ACTIVE: Use the ITI admission database above to answer queries about admissions, seats, trades, and districts. Provide specific ITI names, codes, seat counts, and district information. Search the database and give accurate, detailed responses.';
+            } 
             // ========== CRITICAL SYLLABUS DATABASE SEARCH ==========
             console.log('🔍 Checking for syllabus database...');
             
@@ -2842,14 +2848,137 @@ function addPromptCreatorButton() {
     sidebar.insertBefore(aiToolsSection, sidebar.firstChild);
     console.log('Prompt Creator button added successfully!');
 }
+// ==================== COPY THIS ENTIRE BLOCK ====================
+// Paste after line 2849 (after addPromptCreatorButton function)
+// Before line 2851 (before initializeEnhancements function)
 
+// ==================== ITI ADMISSION BUTTON ====================
+
+function addAdmissionButton() {
+    const sidebar = document.querySelector('.sidebar-content');
+    if (!sidebar) {
+        console.log('Sidebar not found for admission button, retrying...');
+        setTimeout(addAdmissionButton, 500);
+        return;
+    }
+    
+    // Check if already added
+    if (document.getElementById('admissionButton')) {
+        console.log('Admission button already exists');
+        return;
+    }
+    
+    console.log('Adding ITI Admission button...');
+    
+    // Find AI TOOLS section (created by Prompt Creator)
+    let aiToolsSection = Array.from(document.querySelectorAll('.chat-history-section'))
+        .find(section => {
+            const label = section.querySelector('.section-label');
+            return label && label.textContent.includes('AI TOOLS');
+        });
+    
+    // If AI TOOLS section doesn't exist, create it
+    if (!aiToolsSection) {
+        aiToolsSection = document.createElement('div');
+        aiToolsSection.className = 'chat-history-section';
+        aiToolsSection.innerHTML = `<div class="section-label">AI TOOLS</div>`;
+        sidebar.insertBefore(aiToolsSection, sidebar.firstChild);
+    }
+    
+    // Create Admission button
+    const admissionButton = document.createElement('button');
+    admissionButton.id = 'admissionButton';
+    admissionButton.className = 'prompt-creator-button admission-button';
+    admissionButton.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+        </svg>
+        <span>🎓 ITI Admissions</span>
+        <span class="admission-badge">Nagpur</span>
+    `;
+    
+    // Add to AI TOOLS section
+    aiToolsSection.appendChild(admissionButton);
+    
+    // Add click event
+    admissionButton.addEventListener('click', startAdmissionMode);
+    
+    console.log('✅ ITI Admission button added successfully!');
+}
+
+// Start admission mode
+function startAdmissionMode() {
+    console.log('🎓 Starting ITI Admission Mode...');
+    
+    // Check if admission database is loaded
+    if (!window.ITI_ADMISSION_DATABASE || !window.ITI_ADMISSION_DATABASE.regions) {
+        showNotification('Admission database not loaded. Please refresh the page.', 'error');
+        return;
+    }
+    
+    // Create new chat
+    startNewChat();
+    
+    // Set admission mode flag
+    AppState.admissionMode = true;
+    
+    // Mark button as active
+    const btn = document.getElementById('admissionButton');
+    if (btn) {
+        btn.classList.add('admission-mode-active');
+    }
+    
+    // Get welcome message
+    const welcomeMsg = ITI_ADMISSION_DATABASE.getWelcomeMessage();
+    
+    // Add welcome message to chat
+    AIEngine.addAssistantMessage(welcomeMsg);
+    
+    showNotification('ITI Admission Mode activated! 🎓', 'success');
+}
+
+// Exit admission mode
+function exitAdmissionMode() {
+    if (!AppState.admissionMode) return;
+    
+    AppState.admissionMode = false;
+    
+    const btn = document.getElementById('admissionButton');
+    if (btn) {
+        btn.classList.remove('admission-mode-active');
+    }
+    
+    console.log('Exited admission mode');
+}
+
+// Override startNewChat to exit admission mode on regular chat
+const originalStartNewChat = window.startNewChat;
+if (originalStartNewChat) {
+    window.startNewChat = function() {
+        exitAdmissionMode();
+        return originalStartNewChat();
+    };
+}
+
+// ==================== END OF BLOCK ====================
 // ==================== INITIALIZE ====================
 
 function initializeEnhancements() {
     console.log('Initializing chat enhancements...');
     setTimeout(() => {
         addPromptCreatorButton();
+        addAdmissionButton();  // ← ADD THIS LINE
     }, 1000);
+    
+    // Initialize admission database
+    if (window.ITI_ADMISSION_DATABASE) {
+        ITI_ADMISSION_DATABASE.init().then(success => {
+            if (success) {
+                console.log('✅ Admission database initialized');
+            }
+        });
+    }
 }
 
 // Run initialization
@@ -2865,6 +2994,7 @@ if (originalShowChatApp) {
     window.showChatApp = function() {
         originalShowChatApp();
         setTimeout(addPromptCreatorButton, 500);
+		setTimeout(addAdmissionButton, 600);
     };
 }
 
@@ -2873,5 +3003,7 @@ window.generateChatTitle = generateChatTitle;
 window.updateChatTitleInStorage = updateChatTitleInStorage;
 window.startPromptCreator = startPromptCreator;
 window.addPromptCreatorButton = addPromptCreatorButton;
-
+window.addAdmissionButton = addAdmissionButton;      
+window.startAdmissionMode = startAdmissionMode;     
+window.exitAdmissionMode = exitAdmissionMode;  
 console.log('✅ Chat enhancements loaded successfully!');
