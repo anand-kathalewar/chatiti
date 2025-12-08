@@ -223,7 +223,7 @@ const AdmissionQueryEngine = {
         return response;
     },
     
-    // Generate AI context for admission queries
+    // Generate AI context for admission queries - ENHANCED VERSION
     generateAIContext: function() {
         if (!ITI_ADMISSION_DATABASE.regions || !ITI_ADMISSION_DATABASE.regions.Nagpur) {
             return "";
@@ -232,28 +232,96 @@ const AdmissionQueryEngine = {
         const stats = ITI_ADMISSION_DATABASE.getStatistics();
         const nagpur = ITI_ADMISSION_DATABASE.regions.Nagpur;
         
-        return `
-ITI ADMISSION DATABASE (Nagpur Region):
+        // Get sample data to show structure
+        const sampleGovt = nagpur.government.slice(0, 5); // First 5 govt records
+        const samplePvt = nagpur.private.slice(0, 5); // First 5 pvt records
+        
+        let context = `
+═══════════════════════════════════════════════════════════════
+ITI ADMISSION DATABASE - NAGPUR REGION (954 RECORDS)
+═══════════════════════════════════════════════════════════════
+
+STATISTICS:
 - Available Districts: ${nagpur.districts.join(', ')}
 - Total ITIs: ${stats.totalITIs} (${stats.governmentITIs} Government + ${stats.privateITIs} Private)
 - Total Seats: ${stats.totalSeats} (${stats.governmentSeats} Government + ${stats.privateSeats} Private)
 - Total Trades: ${stats.totalTrades}+
 
-Government ITI codes start with 'G', Private ITI codes start with 'P'.
+DATA STRUCTURE:
+- Government ITI codes start with 'G'
+- Private ITI codes start with 'P'
+- Each record has: ITI Code, Taluka, District, Region, ITI Name, TRADE NAME, UNIT CATEGORY, Seat Available
 
-When answering admission queries:
-1. Search the database for exact matches
-2. Provide specific ITI names, codes, and seat counts
-3. Group results by ITI (one ITI can have multiple trades)
-4. Always mention district and taluka
-5. Distinguish between Government and Private ITIs
-6. If asked about unavailable regions, politely inform that only Nagpur region data is currently available
-7. Format responses clearly with proper structure
-
-The database contains ${nagpur.government.length} government ITI records and ${nagpur.private.length} private ITI records.
+SAMPLE GOVERNMENT ITI DATA (showing first 5 records):
 `;
+        
+        sampleGovt.forEach((record, i) => {
+            context += `\n${i+1}. ${record["ITI Name"]}`;
+            context += `\n   Code: ${record["ITI Code"]}`;
+            context += `\n   District: ${record.District}, Taluka: ${record.Taluka}`;
+            context += `\n   Trade: ${record["TRADE NAME"]}`;
+            context += `\n   Category: ${record["UNIT CATEGORY"]}`;
+            context += `\n   Seats: ${record["Seat Available"]}`;
+        });
+        
+        context += `\n\nSAMPLE PRIVATE ITI DATA (showing first 5 records):`;
+        
+        samplePvt.forEach((record, i) => {
+            context += `\n${i+1}. ${record["ITI Name"]}`;
+            context += `\n   Code: ${record["ITI Code"]}`;
+            context += `\n   District: ${record.District}, Taluka: ${record.Taluka}`;
+            context += `\n   Trade: ${record["TRADE NAME"]}`;
+            context += `\n   Category: ${record["UNIT CATEGORY"]}`;
+            context += `\n   Seats: ${record["Seat Available"]}`;
+        });
+        
+        context += `\n\n... and ${nagpur.government.length + nagpur.private.length - 10} more records total.`;
+        
+        context += `\n\n═══════════════════════════════════════════════════════════════
+CRITICAL INSTRUCTIONS FOR ADMISSION QUERIES:
+═══════════════════════════════════════════════════════════════
+
+You have access to the COMPLETE Nagpur region admission database with ${nagpur.government.length + nagpur.private.length} records.
+
+When user asks about ITIs, trades, seats, or districts:
+
+1. **Search Methodology:**
+   - For trade queries: Search ALL ${nagpur.government.length + nagpur.private.length} records for that trade name
+   - For district queries: Filter by district name
+   - For specific ITI: Find by ITI name or code
+
+2. **Data Access:**
+   - Government records: ${nagpur.government.length} entries in nagpur.government array
+   - Private records: ${nagpur.private.length} entries in nagpur.private array
+   - Each record has: ITI Code, District, Taluka, ITI Name, TRADE NAME, UNIT CATEGORY, Seat Available
+
+3. **Response Format:**
+   - List ALL matching ITIs with their codes
+   - Provide seat counts from "Seat Available" field
+   - Mention district and taluka
+   - Distinguish Government (G code) vs Private (P code)
+   - Group multiple trades from same ITI together
+
+4. **Example Query: "Which ITIs offer Electrician?"**
+   Search through all 954 records where TRADE NAME = "Electrician"
+   List each unique ITI with:
+   - ITI Code (e.g., GR27000083 or PR27000206)
+   - ITI Name
+   - District, Taluka
+   - Seat count
+
+5. **Important:**
+   - Use ACTUAL data from the database
+   - Don't make up ITI names or codes
+   - Count seats accurately from records
+   - If asked about unavailable regions, say only Nagpur available
+
+The database is available in memory and searchable. Provide specific, accurate answers with real ITI codes and seat counts.
+═══════════════════════════════════════════════════════════════
+`;
+        
+        return context;
     }
-};
 
 // Make globally available
 window.AdmissionQueryEngine = AdmissionQueryEngine;
