@@ -6,7 +6,7 @@
 // ==================== CONFIGURATION ====================
 
 const CONFIG = {
-GROQ_API_KEY: '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',
+GROQ_API_KEY: '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',
 GROQ_API_URL: 'https://api.groq.com/openai/v1/chat/completions',
 GROQ_MODEL: 'llama-3.3-70b-versatile',
     GEMINI_API_KEY: 'AIzaSyApNbx1RyS77i2yz3gYN2pVYVSeL33GpLg', // Your NEW Tier 1 API key
