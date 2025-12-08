@@ -1311,6 +1311,88 @@ console.log('✅ SyllabusPDFAnalyzer loaded (Google Drive Edition v5.0)!');
 console.log('📚 Features: Google Drive support (NO CORS!), caching, module extraction');
 console.log('🌐 PDF Sources: Google Drive (primary) + CSTAR (fallback)');
 console.log('🎯 Success Rate: 100% with Google Drive links!');
+// ==================== ADMISSION QUERY PRE-SEARCH ====================
+
+function handleAdmissionQuery(userMessage) {
+    if (!AppState.admissionMode || !window.AdmissionQueryEngine) {
+        return null;
+    }
+    
+    console.log('🔍 Analyzing admission query:', userMessage.substring(0, 50) + '...');
+    
+    const lowerMsg = userMessage.toLowerCase();
+    
+    // Extract trade name if present
+    const tradeKeywords = [
+        'electrician', 'fitter', 'welder', 'copa', 'mechanic', 'turner', 
+        'machinist', 'plumber', 'wireman', 'electronics', 'computer', 
+        'refrigeration', 'draughtsman', 'tool', 'die maker', 'moulder',
+        'painter', 'carpenter', 'mason', 'stenographer', 'secretarial'
+    ];
+    
+    let foundTrade = null;
+    for (const trade of tradeKeywords) {
+        if (lowerMsg.includes(trade)) {
+            // Capitalize first letter
+            foundTrade = trade.charAt(0).toUpperCase() + trade.slice(1);
+            // Special case for COPA
+            if (trade === 'copa') foundTrade = 'COPA';
+            console.log(`✅ Detected trade: ${foundTrade}`);
+            break;
+        }
+    }
+    
+    // Extract district name if present
+    const districts = ['nagpur', 'bhandara', 'chandrapur', 'gadchiroli', 'gondia', 'wardha'];
+    let foundDistrict = null;
+    for (const district of districts) {
+        if (lowerMsg.includes(district)) {
+            foundDistrict = district.charAt(0).toUpperCase() + district.slice(1);
+            console.log(`✅ Detected district: ${foundDistrict}`);
+            break;
+        }
+    }
+    
+    // Perform search based on query type
+    let searchResults = null;
+    
+    if (foundTrade && foundDistrict) {
+        console.log(`🔎 Searching for: ${foundTrade} in ${foundDistrict}`);
+        searchResults = AdmissionQueryEngine.searchByTradeAndDistrict(foundTrade, foundDistrict);
+    } else if (foundTrade) {
+        console.log(`🔎 Searching for trade: ${foundTrade}`);
+        searchResults = AdmissionQueryEngine.searchByTrade(foundTrade);
+    } else if (foundDistrict) {
+        console.log(`🔎 Searching for district: ${foundDistrict}`);
+        searchResults = AdmissionQueryEngine.searchByDistrict(foundDistrict);
+    } else {
+        console.log('ℹ️ No specific trade or district detected');
+        return null;
+    }
+    
+    if (searchResults && searchResults.length > 0) {
+        console.log(`✅ Database search found ${searchResults.length} records`);
+        
+        // Format results for AI
+        const formattedResults = AdmissionQueryEngine.formatResultsForAI(searchResults);
+        
+        return {
+            found: true,
+            count: searchResults.length,
+            data: formattedResults,
+            trade: foundTrade,
+            district: foundDistrict
+        };
+    } else {
+        console.log('❌ No matching records found in database');
+        return {
+            found: false,
+            count: 0,
+            trade: foundTrade,
+            district: foundDistrict
+        };
+    }
+}
 // ==================== FINAL COMPLETE AIENGINE WITH PDF ANALYSIS ====================
 // This version has ALL features: Lesson Plan Generator, File Upload, Multi-language, Syllabus Database, PDF Content Analysis
 // REPLACE YOUR ENTIRE AIEngine WITH THIS VERSION
@@ -1598,15 +1680,57 @@ You are helpful, friendly, encouraging, and accurate. Support ITI instructors an
                 context += '\n\n═══════════════════════════════════════════════════════════════';
                 context += '\n🎓 ITI ADMISSION MODE ACTIVE';
                 context += '\n═══════════════════════════════════════════════════════════════';
-                context += '\n\nYou are now in ITI ADMISSION MODE. The user is asking about ITI admissions in Nagpur Region.';
-                context += '\n\nYour task:';
-                context += '\n1. Search the admission database above for the answer';
-                context += '\n2. Provide specific ITI names, codes, districts, talukas, and seat counts';
-                context += '\n3. Distinguish between Government (code starts with G) and Private (code starts with P) ITIs';
-                context += '\n4. Format responses clearly with proper structure';
-                context += '\n5. If asked about unavailable regions, politely inform only Nagpur region data is available';
-                context += '\n\nThe database contains 954 records from Nagpur region covering 6 districts.';
-                context += '\n\nALWAYS search the database and provide accurate, specific information.';
+                
+                // PRE-SEARCH THE DATABASE FOR SPECIFIC QUERIES
+                const searchResult = handleAdmissionQuery(userMessage);
+                
+                if (searchResult && searchResult.found) {
+                    console.log(`📊 Pre-search completed: ${searchResult.count} results found`);
+                    context += '\n\n═══════════════════════════════════════════════════════════════';
+                    context += '\n📊 DATABASE SEARCH RESULTS (ACTUAL DATA):';
+                    context += '\n═══════════════════════════════════════════════════════════════';
+                    if (searchResult.trade && searchResult.district) {
+                        context += `\nQuery: ${searchResult.trade} trade in ${searchResult.district} district`;
+                    } else if (searchResult.trade) {
+                        context += `\nQuery: ${searchResult.trade} trade (all districts)`;
+                    } else if (searchResult.district) {
+                        context += `\nQuery: All trades in ${searchResult.district} district`;
+                    }
+                    context += `\nRecords Found: ${searchResult.count}`;
+                    context += '\n\nACTUAL DATA FROM DATABASE:\n\n';
+                    context += searchResult.data;
+                    context += '\n\n✅ CRITICAL: Use this EXACT data in your response.';
+                    context += '\n✅ These are real ITI codes, names, districts, talukas, and seat counts.';
+                    context += '\n✅ Do NOT make up or modify any information.';
+                    context += '\n✅ Present the data in a clear, well-formatted manner.';
+                    context += '\n═══════════════════════════════════════════════════════════════';
+                } else if (searchResult && !searchResult.found) {
+                    console.log('❌ Database search returned no results');
+                    context += '\n\n❌ DATABASE SEARCH RESULTS: NO MATCHES FOUND';
+                    if (searchResult.trade || searchResult.district) {
+                        context += `\nSearched for: ${searchResult.trade || 'any trade'}${searchResult.district ? ' in ' + searchResult.district : ''}`;
+                    }
+                    context += '\n\nInform the user politely that no ITIs were found matching their criteria.';
+                    context += '\nSuggest they try:';
+                    context += '\n- Different trade name';
+                    context += '\n- Different district';
+                    context += '\n- Ask about available trades or districts';
+                } else {
+                    console.log('ℹ️ General admission query - no specific search performed');
+                    context += '\n\nThe user is asking a general question about admissions.';
+                    context += '\nProvide helpful information based on the database statistics shown above.';
+                }
+                
+                context += '\n\n═══════════════════════════════════════════════════════════════';
+                context += '\nYOUR TASK:';
+                context += '\n═══════════════════════════════════════════════════════════════';
+                context += '\n1. If search results are provided above, present them clearly';
+                context += '\n2. Include ITI codes, names, districts, talukas, and seat counts';
+                context += '\n3. Distinguish Government (G codes) vs Private (P codes)';
+                context += '\n4. Format responses in a professional, easy-to-read manner';
+                context += '\n5. For unavailable regions, mention only Nagpur data is available';
+                context += '\n\nThe database contains 954 records from Nagpur region (6 districts).';
+                context += '\nALWAYS use the actual search results provided - they are accurate and verified.';
                 context += '\n═══════════════════════════════════════════════════════════════\n\n';
             }
             // ========== CRITICAL SYLLABUS DATABASE SEARCH ==========
