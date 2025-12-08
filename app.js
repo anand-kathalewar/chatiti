@@ -1584,12 +1584,31 @@ You are helpful, friendly, encouraging, and accurate. Support ITI instructors an
                 const dbContext = `\n\nAvailable ITI Information:\n${JSON.stringify(AppState.itiDatabase, null, 2)}`;
                 context += dbContext;
             }
-           // Add admission database context if in admission mode
+           // Add ITI database context if available
+            if (AppState.itiDatabase) {
+                const dbContext = `\n\nAvailable ITI Information:\n${JSON.stringify(AppState.itiDatabase, null, 2)}`;
+                context += dbContext;
+            }
+            
+            // ========== ITI ADMISSION MODE CONTEXT ==========
             if (AppState.admissionMode && window.AdmissionQueryEngine) {
+                console.log('🎓 ADMISSION MODE ACTIVE - Adding database context');
                 const admissionContext = AdmissionQueryEngine.generateAIContext();
                 context += '\n\n' + admissionContext;
-                context += '\n\n🎓 ADMISSION MODE ACTIVE: Use the ITI admission database above to answer queries about admissions, seats, trades, and districts. Provide specific ITI names, codes, seat counts, and district information. Search the database and give accurate, detailed responses.';
-            } 
+                context += '\n\n═══════════════════════════════════════════════════════════════';
+                context += '\n🎓 ITI ADMISSION MODE ACTIVE';
+                context += '\n═══════════════════════════════════════════════════════════════';
+                context += '\n\nYou are now in ITI ADMISSION MODE. The user is asking about ITI admissions in Nagpur Region.';
+                context += '\n\nYour task:';
+                context += '\n1. Search the admission database above for the answer';
+                context += '\n2. Provide specific ITI names, codes, districts, talukas, and seat counts';
+                context += '\n3. Distinguish between Government (code starts with G) and Private (code starts with P) ITIs';
+                context += '\n4. Format responses clearly with proper structure';
+                context += '\n5. If asked about unavailable regions, politely inform only Nagpur region data is available';
+                context += '\n\nThe database contains 954 records from Nagpur region covering 6 districts.';
+                context += '\n\nALWAYS search the database and provide accurate, specific information.';
+                context += '\n═══════════════════════════════════════════════════════════════\n\n';
+            }
             // ========== CRITICAL SYLLABUS DATABASE SEARCH ==========
             console.log('🔍 Checking for syllabus database...');
             
@@ -2933,7 +2952,7 @@ function startAdmissionMode() {
     const welcomeMsg = ITI_ADMISSION_DATABASE.getWelcomeMessage();
     
     // Add welcome message to chat
-    AIEngine.addAssistantMessage(welcomeMsg);
+    ChatManager.addMessage('assistant', welcomeMsg);
     
     showNotification('ITI Admission Mode activated! 🎓', 'success');
 }
