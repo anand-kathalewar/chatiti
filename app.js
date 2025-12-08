@@ -2138,8 +2138,14 @@ async function sendMessage() {
         // Get AI response (with file if present)
         const response = await AIEngine.generateResponse(message || 'Please analyze this file and summarize it.', fileData);
         
+        // Add disclaimer for admission mode responses
+        let finalResponse = response;
+        if (AppState.admissionMode) {
+            finalResponse = response + '\n\n---\n\n⚠️ **Disclaimer:** This data is from the 2025 admission cycle and may be subject to change. Please verify all information at the official admission portal: https://admission.dvet.gov.in/';
+        }
+        
         // Add AI response
-        ChatManager.addMessage('assistant', response);
+        ChatManager.addMessage('assistant', finalResponse);
         renderMessages();
         
         // Clear file after use
