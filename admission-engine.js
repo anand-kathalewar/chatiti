@@ -323,6 +323,8 @@ The database is available in memory and searchable. Provide specific, accurate a
         return context;
     }
 
+};
+
 // Make globally available
 window.AdmissionQueryEngine = AdmissionQueryEngine;
 
