@@ -3054,7 +3054,11 @@ function addAdmissionButton() {
     console.log('✅ ITI Admission button added successfully!');
 }
 
-// Start admission mode
+// ==================== COMPLETE ADMISSION MODE FUNCTIONS ====================
+// Replace ALL THREE functions starting from line with "// Start admission mode"
+// This includes: startAdmissionMode, exitAdmissionMode, and the startNewChat override
+
+// Start admission mode - FIXED VERSION
 function startAdmissionMode() {
     console.log('🎓 Starting ITI Admission Mode...');
     
@@ -3064,11 +3068,30 @@ function startAdmissionMode() {
         return;
     }
     
-    // Create new chat
-    startNewChat();
+    // Use ChatManager to create new chat (like Prompt Creator)
+    ChatManager.createChat();
+    
+    // Get the newly created chat
+    const currentChat = ChatManager.getCurrentChat();
+    if (!currentChat) {
+        console.error('Failed to create chat');
+        return;
+    }
     
     // Set admission mode flag
     AppState.admissionMode = true;
+    
+    // Update chat title and mark as admission mode
+    currentChat.title = '🎓 ITI Admissions';
+    currentChat.isAdmissionMode = true;
+    ChatManager.saveChats();
+    
+    // Clear messages and hide welcome screen
+    const chatMessages = document.getElementById('chatMessages');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    
+    if (chatMessages) chatMessages.innerHTML = '';
+    if (welcomeScreen) welcomeScreen.style.display = 'none';
     
     // Mark button as active
     const btn = document.getElementById('admissionButton');
@@ -3079,10 +3102,25 @@ function startAdmissionMode() {
     // Get welcome message
     const welcomeMsg = ITI_ADMISSION_DATABASE.getWelcomeMessage();
     
-    // Add welcome message to chat
+    // Add welcome message using ChatManager
     ChatManager.addMessage('assistant', welcomeMsg);
     
+    // Display the message immediately
+    renderMessages();
+    
+    // Set message input with admission query template
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.value = 'Ask me about ITI admissions in Nagpur region: ';
+        messageInput.focus();
+        messageInput.setSelectionRange(messageInput.value.length, messageInput.value.length);
+    }
+    
+    // Update chat history UI
+    renderChatHistory();
+    
     showNotification('ITI Admission Mode activated! 🎓', 'success');
+    console.log('✅ Admission Mode initialized successfully!');
 }
 
 // Exit admission mode
