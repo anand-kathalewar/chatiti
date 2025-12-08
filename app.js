@@ -1615,7 +1615,11 @@ You are helpful, friendly, encouraging, and accurate. Support ITI instructors an
             // Track matched trade for potential PDF analysis
             let matchedTrade = null;
             
-            if (AppState.syllabusDatabase && AppState.syllabusDatabase.trades) {
+            // SKIP syllabus search if in admission mode
+            if (AppState.admissionMode) {
+                console.log('⏭️ SKIPPING syllabus search - Admission mode is active');
+                matchedTrade = null;
+            } else if (AppState.syllabusDatabase && AppState.syllabusDatabase.trades) {
                 console.log('✅ Syllabus database found with', AppState.syllabusDatabase.trades.length, 'trades');
                 
                 // Check if user message contains syllabus-related keywords
